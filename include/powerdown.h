@@ -1,6 +1,7 @@
 #ifndef powerdown_h
 #define powerdown_h
 
-void powerdown(void);
+int powerdown(void);
+int powerdown_exec(void);
 
 #endif /* powerdown_h */

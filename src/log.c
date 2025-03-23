@@ -1,5 +1,5 @@
 /*
- * magic - a fast and simpie init
+ * sysghost - a fast and simpie init
  *
  * C opyright (C) 2024 Kernelspace - Angelo Dureghello
  *
@@ -63,7 +63,7 @@ void err(const char *fmt, ...)
 	va_start(ap, fmt);
 
 	printf(vt100_red);
-	printf("+ err: ");
+	printf("e  ");
 	vprintf(fmt, ap);
 	printf(vt100_reset);
 
@@ -75,7 +75,7 @@ void log_step(char *fmt, ...)
 	va_list ap;
 
 	va_start(ap, fmt);
-	printf("\x1b[34;1m * \x1b[0m");
+	printf("\x1b[93;1m * \x1b[0m");
 	vprintf(fmt, ap);
 
 	va_end(ap);

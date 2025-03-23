@@ -1,5 +1,5 @@
 /*
- * magic - a fast and simpie init
+ * sysghost - a fast and simpie init
  *
  * C opyright (C) 2024 Kernelspace - Angelo Dureghello
  *
@@ -19,24 +19,23 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <stdio.h>
-#include <string.h>
-
 #include "launcher.h"
-#include "powerdown.h"
 #include "log.h"
 #include "version.h"
+#include "monitor.h"
 
-#define CMD_POWERDOWN	"powerdown"
+#include <linux/reboot.h>  /* Definition of LINUX_REBOOT_* constants */
+#include <stdio.h>
+#include <string.h>
+#include <sys/syscall.h>   /* Definition of SYS_* constants */
+#include <sys/reboot.h>    /* Definition of RB_* constants */
+#include <unistd.h>
 
 int main(int argc, char **argv)
 {
-	if (strncmp(argv[0], CMD_POWERDOWN, strlen(CMD_POWERDOWN)) == 0)
-		powerdown();
-
-	log(0, " * " MAGIC_STR " init system v." VERSION " starting !\n");
+	log(0, SYSGHOST_STR " init system v." VERSION " starting\n");
 
 	launcher_init();
 
-	return 0;
+	return monitor_run();
 }

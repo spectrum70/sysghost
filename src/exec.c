@@ -1,5 +1,5 @@
 /*
- * magic - a fast and simpie init
+ * sysghost - a fast and simpie init
  *
  * C opyright (C) 2024 Kernelspace - Angelo Dureghello
  *
@@ -22,9 +22,11 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <sys/wait.h>
 
 #include "log.h"
 #include "exec.h"
+#include "process.h"
 
 #define MAX_ARGV	128
 
@@ -57,7 +59,19 @@ void exec_cmdline_to_argv(char *cmd_line, char **argv)
 
 }
 
-int exec(char *cmd_line)
+const char *exec_get_name(const char *name)
+{
+	const char *p = name, *rval = 0;
+
+	while (*p) {
+		if (*p++ == '/')
+			rval = p;
+	}
+
+	return rval;
+}
+
+int __exec(char *cmd_line, int wait)
 {
 	pid_t pid;
 	char *argv[MAX_ARGV] = {0};
@@ -67,7 +81,25 @@ int exec(char *cmd_line)
 	log_step("executing %s ...\n", argv[0]);
 	if ((pid = fork()) == 0) {
 		execvp(argv[0], argv);
+	} else {
+		int status;
+
+		process_save_pid(exec_get_name(argv[0]), (int)pid);
+		/* Avoid zombies, always wait termination */
+		if (wait)
+			waitpid(pid, &status, 0);
 	}
 
 	return 0;
+}
+
+int exec(char *cmd_line)
+{
+	return __exec(cmd_line, 1);
+}
+
+/* For daemons, we cannot wait termination. */
+int exec_daemon(char *cmd_line)
+{
+	return __exec(cmd_line, 0);
 }

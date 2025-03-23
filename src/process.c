@@ -1,5 +1,5 @@
 /*
- * magic - a fast and simpie init
+ * sysghost - a fast and simpie init
  *
  * C opyright (C) 2024 Kernelspace - Angelo Dureghello
  *
@@ -35,7 +35,7 @@ int process_save_pid(const char *name, int pid)
 	char fname[MAX_PATH] = {0};
 
 	if (!fs_dir_exists(RUN_PID_PATH)) {
-		if (fs_create_dir(RUN_PID_PATH)) {
+		if (fs_create_dir(RUN_PID_PATH, 0777)) {
 			err("cannot create %s\n", RUN_PID_PATH);
 			return -1;
 		}
@@ -62,6 +62,9 @@ int process_kill_by_name(const char *name)
 	char fname[MAX_PATH] = {0};
 	int pid;
 	int timeout = 3000000 / PS_EXIT_US_INTERVAL;
+
+	if (!name || *name == 0)
+		return -1;
 
 	sprintf(fname, "%s%s", RUN_PID_PATH, name);
 

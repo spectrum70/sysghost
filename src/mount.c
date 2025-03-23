@@ -1,5 +1,5 @@
 /*
- * magic - a fast and simpie init
+ * sysghost - a fast and simpie init
  *
  * C opyright (C) 2024 Kernelspace - Angelo Dureghello
  *
@@ -32,9 +32,11 @@
 #include <stdlib.h>
 
 #include "log.h"
+#include "fs.h"
 
 #define MAX_PATH	512
 #define MAX_SWAP_LINE	1024
+#define MOUNTS_PATH	"/run/sysghost/"
 
 int mount_check_mounted(char *name, char *mnt_opts)
 {
@@ -111,7 +113,7 @@ int mount_get_fstab_mnt_options(char *opts)
 	return val;
 }
 
-	void mount_rest(void)
+void mount_rest(void)
 {
 	int ps_flags = MS_NOSUID | MS_NODEV | MS_NOEXEC | MS_RELATIME;
 
@@ -120,6 +122,7 @@ int mount_get_fstab_mnt_options(char *opts)
 	mkdir("/dev/pts", 0755);
 	mkdir("/run/user", 0755);
 	mkdir("/dev/mqueue", 0777);
+
 	mount("devpts", "/dev/pts", "devpts", ps_flags, "");
 	mount("debugfs", "/sys/kernel/debug", "debugfs", ps_flags, "");
 	mount("securityfs", "/sys/kernel/security", "securityfs", ps_flags, "");
@@ -138,8 +141,24 @@ int mount_get_fstab_mnt_options(char *opts)
 	log_step("mounting tmp tmpfs ...\n");
 
 	system("mount -t tmpfs "
-		"-o mode=1777,strictatime,nosuid,nodev,"
-		"size=16391740k,nr_inodes=1M tmpfs /tmp");
+	       "-o mode=1777,strictatime,nosuid,nodev,"
+	       "size=16391740k,nr_inodes=1M tmpfs /tmp");
+}
+
+int mount_save_device(char *dev, char *name)
+{
+	char fname[MAX_PATH] = {0};
+
+	if (!fs_dir_exists(MOUNTS_PATH)) {
+		if (fs_create_dir(MOUNTS_PATH, 0777)) {
+			err("cannot create /run/sysghost\n");
+			return -1;
+		}
+	}
+
+	sprintf(fname, MOUNTS_PATH "%s", name);
+
+	return fs_create_file_write_str(fname, dev);
 }
 
 void mount_fstab(void)
@@ -182,6 +201,10 @@ void mount_fstab(void)
 					err("could not set swap on\n");
 				}
 				log_step("swap activated\n");
+
+				if (mount_save_device(dev_name, "swap"))
+					err("could not save swap dev\n");
+
 				continue;
 			}
 		} else {

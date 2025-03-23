@@ -1,5 +1,5 @@
 /*
- * magic - a fast and simpie init
+ * sysghost - a fast and simpie init
  *
  * C opyright (C) 2024 Kernelspace - Angelo Dureghello
  *
@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
+#include "fs.h"
 #include "log.h"
 
 int fs_dir_exists(const char *path)
@@ -34,9 +35,14 @@ int fs_dir_exists(const char *path)
 	return 0;
 }
 
-int fs_create_dir(const char *path)
+int fs_create_dir(const char *path, int mode)
 {
-	return mkdir(path, 0777);
+	if (mkdir(path, 0777)) {
+		err("cannot create dir %s\n", path);
+		return -1;
+	}
+
+	return 0;
 }
 
 int fs_create_file_write_int(char *path, int num)
@@ -48,6 +54,20 @@ int fs_create_file_write_int(char *path, int num)
 		return -1;
 
 	fprintf(f, "%d\n", num);
+	fclose(f);
+
+	return 0;
+}
+
+int fs_create_file_write_str(char *path, char *str)
+{
+	FILE *f;
+
+	f = fopen(path, "w");
+	if (!f)
+		return -1;
+
+	fprintf(f, "%s\n", str);
 	fclose(f);
 
 	return 0;
@@ -65,4 +85,24 @@ int fs_file_read_int(const char *path, int *num)
 	fclose(f);
 
 	return 0;
+}
+
+int fs_file_read_str(const char *path, char *str)
+{
+	FILE *f;
+	size_t n = MAX_LINE, r;
+	int rval = -1;
+
+	f = fopen(path, "r");
+	if (!f)
+		return rval;
+
+	if ((r = getline(&str, &n, f))) {
+		str[r - 1] = 0;
+		rval = 0;
+	}
+
+	fclose(f);
+
+	return rval;
 }
