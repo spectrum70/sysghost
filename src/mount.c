@@ -40,44 +40,50 @@
 
 int mount_check_mounted(char *name, char *mnt_opts)
 {
-	FILE *f;
 	struct mntent *ent;
+	FILE *f;
+	int ret = -1;
 
 	f = setmntent("/proc/mounts", "r");
 	if (!f) {
 		err("setmntent");
-		return 0;
+		return ret;
 	}
 
 	while ((ent = getmntent(f)) != 0) {
 		if (strncmp(name, ent->mnt_fsname, strlen(name)) != 0)
 			continue;
-		if (strncmp(mnt_opts, ent->mnt_opts, strlen(mnt_opts)) == 0)
-			return 1;
+		if (strncmp(mnt_opts, ent->mnt_opts, strlen(mnt_opts)) == 0) {
+			ret = 0;
+			break;
+		}
 	}
 
 	endmntent(f);
 
-	return 0;
+	return ret;
 }
 
 int mount_check_swap_mounted(char *name)
 {
-	FILE *f;
 	char line[MAX_SWAP_LINE];
+	FILE *f;
+	int ret = -1;
 
 	f = fopen("/proc/swaps", "r");
 	if (!f)
-		return 0;
+		return ret;
 
 	while (fgets(line, MAX_SWAP_LINE - 1, f) != NULL) {
-		if (strncmp(line, name, strlen(name)) == 0)
-			return 1;
+		if (strncmp(line, name, strlen(name)) == 0) {
+			ret = 0;
+			break;
+		}
 	}
 
 	fclose(f);
 
-	return 0;
+	return ret;
 }
 
 void mount_translate_opt(const char *opt, int *val)
@@ -97,7 +103,7 @@ int mount_get_fstab_mnt_options(char *opts)
 	char *s = opts, *p;
 
 	if (!opts)
-		return 0;
+		return -1;
 
 	while ((p = strchr(opts, ','))) {
 		*p = 0;
@@ -113,36 +119,88 @@ int mount_get_fstab_mnt_options(char *opts)
 	return val;
 }
 
-void mount_rest(void)
+int mount_rest(void)
 {
 	int ps_flags = MS_NOSUID | MS_NODEV | MS_NOEXEC | MS_RELATIME;
+	int ret;
 
-	log_step("mounting pseudo filesystems ...\n");
+	log_step("mounting pseudo filesystems ... ");
 
-	mkdir("/dev/pts", 0755);
-	mkdir("/run/user", 0755);
-	mkdir("/dev/mqueue", 0777);
+	ret = mkdir("/dev/pts", 0755);
+	if (ret)
+		goto err_step;
+	ret = mkdir("/run/user", 0755);
+	if (ret)
+		goto err_step;
+	ret = mkdir("/dev/mqueue", 0777);
+	if (ret)
+		goto err_step;
 
-	mount("devpts", "/dev/pts", "devpts", ps_flags, "");
-	mount("debugfs", "/sys/kernel/debug", "debugfs", ps_flags, "");
-	mount("securityfs", "/sys/kernel/security", "securityfs", ps_flags, "");
-	mount("tracefs", "/sys/kernel/tracing", "tracefs", ps_flags, "");
-	mount("configfs", "/sys/kernel/config", "configfs", ps_flags, "");
-	mount("fusectl", "/sys/fs/fuse/connections", "fusectl", ps_flags, "");
-	mount("pstore", "/sys/fs/pstore", "pstore", ps_flags, "");
-	mount("mqueue", "/dev/mqueue", "mqueue", ps_flags, "");
-	mount("cgroup2", "/sys/fs/cgroup", "cgroup2", ps_flags, "");
+	ret = mount("devpts", "/dev/pts", "devpts", ps_flags, "");
+	if (ret)
+		goto err_step;
+	ret = mount("debugfs", "/sys/kernel/debug", "debugfs", ps_flags, "");
+	if (ret)
+		goto err_step;
+	ret = mount("securityfs", "/sys/kernel/security", "securityfs",
+		    ps_flags, "");
+	if (ret)
+		goto err_step;
+	ret = mount("tracefs", "/sys/kernel/tracing", "tracefs", ps_flags, "");
+	if (ret)
+		goto err_step;
+	ret = mount("configfs", "/sys/kernel/config", "configfs", ps_flags, "");
+	if (ret)
+		goto err_step;
+#if 0
+	/*
+	 * This step seems cannot be obrained from here, likely,
+	 * get done from userspace.
+	 */
+	ret = mount("fusectl", "/sys/fs/fuse/connections", "fusectl",
+		    ps_flags, "");
+	if (ret)
+		goto err_step;
+#endif
+	ret = mount("pstore", "/sys/fs/pstore", "pstore", ps_flags, "");
+	if (ret)
+		goto err_step;
+	ret = mount("mqueue", "/dev/mqueue", "mqueue", ps_flags, "");
+	if (ret)
+		goto err_step;
+	ret = mount("cgroup2", "/sys/fs/cgroup", "cgroup2", ps_flags, "");
+	if (ret)
+		goto err_step;
 
-	log_step("mounting shared memory tmpfs ...\n");
+	log_step_success();
 
-	mkdir("/dev/shm", 0777);
-	mount("tmpfs", "/dev/shm", "tmpfs", MS_NOSUID | MS_NODEV, "");
+	log_step("mounting shared memory tmpfs ... ");
 
-	log_step("mounting tmp tmpfs ...\n");
+	ret = mkdir("/dev/shm", 0777);
+	if (ret)
+		goto err_step;
+	ret = mount("tmpfs", "/dev/shm", "tmpfs", MS_NOSUID | MS_NODEV, "");
+	if (ret)
+		goto err_step;
 
-	system("mount -t tmpfs "
-	       "-o mode=1777,strictatime,nosuid,nodev,"
-	       "size=16391740k,nr_inodes=1M tmpfs /tmp");
+	log_step_success();
+
+	log_step("mounting tmp tmpfs ... ");
+
+	ret = system("mount -t tmpfs "
+		     "-o mode=1777,strictatime,nosuid,nodev,"
+		     "size=16391740k,nr_inodes=1M tmpfs /tmp");
+	if (ret)
+		goto err_step;
+
+	log_step_success();
+
+	return 0;
+
+err_step:
+	log_step_err();
+
+	return -1;
 }
 
 int mount_save_device(char *dev, char *name)
@@ -161,7 +219,7 @@ int mount_save_device(char *dev, char *name)
 	return fs_create_file_write_str(fname, dev);
 }
 
-void mount_fstab(void)
+int mount_fstab(void)
 {
 	struct fstab *fs;
 	char *dev_name;
@@ -170,7 +228,7 @@ void mount_fstab(void)
 
 	if (setfsent() != 1) {
 		err("could not open fstab\n");
-		return;
+		return -1;
 	}
 
 	while((fs = getfsent())) {
@@ -189,18 +247,22 @@ void mount_fstab(void)
 		}
 
 		if (strncmp(fs->fs_vfstype, "swap", 4) == 0) {
-			if (mount_check_swap_mounted(dev_name)) {
-				log_step("* swap already created, skipping\n");
+			if (mount_check_swap_mounted(dev_name) == 0) {
+				log_step("swap already created, skipping\n");
 				continue;
 			} else {
 				/*
 				 * TODO: assuming default flags,
 				 * priorities to be done later.
 				 */
+				log_step("activating swap ");
+
 				if (swapon(dev_name, SWAP_FLAG_DISCARD) == -1) {
-					err("could not set swap on\n");
+					log_step_err();
+					continue;
 				}
-				log_step("swap activated\n");
+
+				log_step_success();
 
 				if (mount_save_device(dev_name, "swap"))
 					err("could not save swap dev\n");
@@ -208,20 +270,27 @@ void mount_fstab(void)
 				continue;
 			}
 		} else {
-			if (mount_check_mounted(name, fs->fs_mntops)) {
-				log_step("%s already mounted, skipping\n",
+			if (mount_check_mounted(name, fs->fs_mntops) == 0) {
+				log_skip("%s already mounted, skipping\n",
 				    name);
 				continue;
 			}
 		}
 
-		log_step("mounting %s to %s\n", dev_name, fs->fs_file);
+		log_step("mounting %s to %s ", dev_name, fs->fs_file);
 
 		if (mount(dev_name, fs->fs_file, fs->fs_vfstype,
-			  mount_get_fstab_mnt_options(fs->fs_mntops),
-			  "") != 0) {
-			log_step_err("could not mount %s\n", dev_name);
-		}
+			  mount_get_fstab_mnt_options(fs->fs_mntops), "") != 0)
+			goto err_mount;
+
+		log_step_success();
 	}
+
+	return 0;
+
+err_mount:
+	log_step_err();
+
+	return -1;
 }
 

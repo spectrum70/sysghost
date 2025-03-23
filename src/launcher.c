@@ -49,9 +49,11 @@ int launcher_get_cpus()
 
 void launcher_step_mount()
 {
-	log_step("mounting filesystems ...\n");
+	/* Steps and rrror check inside called functions. */
 	mount_fstab();
 	mount_rest();
+
+	return;
 }
 
 void launcher_step_virtual_consoles()
@@ -63,8 +65,6 @@ void launcher_step_virtual_consoles()
 		{"/sbin/agetty tty4 linux &"},
 		{0},
 	};
-
-	log_step("creating virtual consoles [2 to 4] ...\n");
 
 	for (i = 0; *vc[i]; i++) {
 		exec_daemon(vc[i]);
@@ -102,7 +102,7 @@ void launcher_init()
 	 * seems to work only when a udevd is active, and seems there
 	 * is not alternative to this.
 	 */
-	log_step("launching udevd ...\n");
+	log_step("launching udevd ... ");
 
 	/*
 	 * Modern kernels uses devtmpfs that creates devices nodes
@@ -137,6 +137,9 @@ void launcher_init()
 
 	/* Wait to be launched */
 	wait(&status);
+
+	log_step_success();
+
 	/* Brief pause */
 	sleep(1);
 
@@ -147,9 +150,7 @@ void launcher_init()
 	launcher_step_mount();
 
 	if (fs_dir_exists("/etc/sysghost")) {
-		log_step("setup devices ...\n");
 		exec("/etc/sysghost/udevd.sh");
-		log_step("init commands ...\n");
 		exec("/etc/sysghost/commands.sh");
 	}
 

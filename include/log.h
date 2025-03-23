@@ -6,7 +6,9 @@
 void log(int level, const char *fmt, ...);
 void err(const char *fmt, ...);
 
+void log_skip(char *fmt, ...);
 void log_step(char *fmt, ...);
-void log_step_err(char *fmt, ...);
+void log_step_success();
+void log_step_err();
 
 #endif /* log_h */

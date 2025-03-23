@@ -77,17 +77,29 @@ void log_step(char *fmt, ...)
 	va_start(ap, fmt);
 	printf("\x1b[95m● \x1b[0m");
 	vprintf(fmt, ap);
+	fflush(stdout);
 
 	va_end(ap);
 }
 
-void log_step_err(char *fmt, ...)
+void log_skip(char *fmt, ...)
 {
 	va_list ap;
 
 	va_start(ap, fmt);
-	printf("\x1b[31;1me \x1b[0m");
+	printf("\x1b[37m● \x1b[0m");
 	vprintf(fmt, ap);
 
 	va_end(ap);
 }
+
+void log_step_err()
+{
+	printf("\x1b[31;1merror\x1b[0m\n");
+}
+
+void log_step_success()
+{
+	printf("\x1b[95msuccess\x1b[0m\n");
+}
+

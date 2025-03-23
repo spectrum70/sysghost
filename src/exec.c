@@ -90,6 +90,9 @@ int __exec(char *cmd_line, int wait)
 			waitpid(pid, &status, 0);
 	}
 
+	/* We can't succeed here, executing .sh can exec
+	 * and trace messages from other subtask (inside .sh) */
+
 	return 0;
 }
 
