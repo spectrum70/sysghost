@@ -1,5 +1,5 @@
 AC_PREREQ([2.69])
-AC_INIT([sysghost], [0.90(alpha)], [angelo@kernel-space.org], [sysghost], [http://www.kernel-space.org/])
+AC_INIT([sysghost], [0.91(alpha)], [angelo@kernel-space.org], [sysghost], [http://www.kernel-space.org/])
 AM_INIT_AUTOMAKE(subdir-objects)
 
 # Checks for programs.
