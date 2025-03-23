@@ -1,11 +1,10 @@
 AUTOMAKE_OPTIONS = -Wno-portability
 
 GIT_VERSION = $(shell git describe --abbrev=8 --dirty --always --tags)
-AM_CXXFLAGS = -DGIT_VERSION='"$(GIT_VERSION)"'
 
 bin_PROGRAMS = sysghost sysdown
 
-sysghost_CPPFLAGS = -Iinclude
+sysghost_CPPFLAGS = -Iinclude -DGIT_VERSION='"$(GIT_VERSION)"'
 sysghost_SOURCES = src/main.c \
 		src/log.c \
 		src/launcher.c \
@@ -17,5 +16,5 @@ sysghost_SOURCES = src/main.c \
 		src/umount.c \
 		src/monitor.c
 
-sysdown_CPPFLAGS = -Iinclude
+sysdown_CPPFLAGS = -Iinclude -DGIT_VERSION='"$(GIT_VERSION)"'
 sysdown_SOURCES = src/sysdown.c
