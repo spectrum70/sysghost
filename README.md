@@ -27,8 +27,8 @@ Just add sysghost to the kernel command line, as
 sudo sysdiown
 ```
 ### Scripts
-Please find sample scripts in the scripts direvotry.
-Mandatory names actually are:
+Please find sample scripts in the scripts directory.
+Mandatory names that are actually processed from sysghost are:
 ```
 /etc/sysghost/udevd.sh
 /etc/sysghost/commands.sh
