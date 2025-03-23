@@ -75,7 +75,7 @@ void log_step(char *fmt, ...)
 	va_list ap;
 
 	va_start(ap, fmt);
-	printf("\x1b[93;1m * \x1b[0m");
+	printf("\x1b[95m● \x1b[0m");
 	vprintf(fmt, ap);
 
 	va_end(ap);
@@ -86,7 +86,7 @@ void log_step_err(char *fmt, ...)
 	va_list ap;
 
 	va_start(ap, fmt);
-	printf("\x1b[31;1m * \x1b[0m");
+	printf("\x1b[31;1me \x1b[0m");
 	vprintf(fmt, ap);
 
 	va_end(ap);
