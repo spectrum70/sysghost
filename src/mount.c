@@ -53,6 +53,8 @@ int mount_check_mounted(char *name, char *mnt_opts)
 	while ((ent = getmntent(f)) != 0) {
 		if (strncmp(name, ent->mnt_fsname, strlen(name)) != 0)
 			continue;
+		if (!mnt_opts)
+			break;
 		if (strncmp(mnt_opts, ent->mnt_opts, strlen(mnt_opts)) == 0) {
 			ret = 0;
 			break;
@@ -248,7 +250,7 @@ int mount_fstab(void)
 
 		if (strncmp(fs->fs_vfstype, "swap", 4) == 0) {
 			if (mount_check_swap_mounted(dev_name) == 0) {
-				log_step("swap already created, skipping\n");
+				log_skip("swap already created, skipping\n");
 				continue;
 			} else {
 				/*
@@ -270,7 +272,8 @@ int mount_fstab(void)
 				continue;
 			}
 		} else {
-			if (mount_check_mounted(name, fs->fs_mntops) == 0) {
+			/* Mount options can be different from initramfs ? */
+			if (mount_check_mounted(name, 0) == 0) {
 				log_skip("%s already mounted, skipping\n",
 				    name);
 				continue;
@@ -280,17 +283,14 @@ int mount_fstab(void)
 		log_step("mounting %s to %s ", dev_name, fs->fs_file);
 
 		if (mount(dev_name, fs->fs_file, fs->fs_vfstype,
-			  mount_get_fstab_mnt_options(fs->fs_mntops), "") != 0)
-			goto err_mount;
+		    mount_get_fstab_mnt_options(fs->fs_mntops), "") != 0) {
+			log_step_err();
+			continue;
+		}
 
 		log_step_success();
 	}
 
 	return 0;
-
-err_mount:
-	log_step_err();
-
-	return -1;
 }
 
