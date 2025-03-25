@@ -27,10 +27,17 @@
 static int loglevel = 6;
 static int loglevel_max = 12;
 
-static char vt100_bold[] = "\x1b[1m";
-static char vt100_red[] = "\x1b[31;1m";
-static char vt100_yellow[] = "\x1b[33;1m";
-static char vt100_reset[] = "\x1b[0m";
+#define esc		"\x1b["
+#define g_red		esc "31m"
+#define g_yellow	esc "33m"
+#define g_gray		esc "37m"
+#define g_blue		esc "94m"
+#define g_fuxia		esc "95m"
+
+#define g_bold		esc "1m"
+#define g_reset		esc "0m"
+
+#define g_bold_red	esc "1;" g_red
 
 void log(int level, const char *fmt, ...)
 {
@@ -40,10 +47,10 @@ void log(int level, const char *fmt, ...)
 	if (level <= loglevel && level < loglevel_max) {
 		switch(level) {
 		case 0:
-			printf(vt100_bold);
+			printf(g_bold);
 			break;
 		case 1:
-			printf(vt100_yellow);
+			printf(g_yellow);
 			break;
 		default:
 			break;
@@ -51,7 +58,7 @@ void log(int level, const char *fmt, ...)
 
 		vprintf(fmt, ap);
 
-		printf(vt100_reset);
+		printf(g_reset);
 	}
 	va_end(ap);
 }
@@ -62,10 +69,10 @@ void err(const char *fmt, ...)
 
 	va_start(ap, fmt);
 
-	printf(vt100_red);
+	printf(g_red);
 	printf("e  ");
 	vprintf(fmt, ap);
-	printf(vt100_reset);
+	printf(g_reset);
 
 	va_end(ap);
 }
@@ -75,7 +82,7 @@ void log_step(char *fmt, ...)
 	va_list ap;
 
 	va_start(ap, fmt);
-	printf("\x1b[95m● \x1b[0m");
+	printf(g_fuxia "● " g_reset);
 	vprintf(fmt, ap);
 	fflush(stdout);
 
@@ -87,7 +94,7 @@ void log_skip(char *fmt, ...)
 	va_list ap;
 
 	va_start(ap, fmt);
-	printf("\x1b[37m● \x1b[0m");
+	printf(g_gray "● " g_reset);
 	vprintf(fmt, ap);
 
 	va_end(ap);
@@ -95,11 +102,19 @@ void log_skip(char *fmt, ...)
 
 void log_step_err()
 {
-	printf("\x1b[31;1merror\x1b[0m\n");
+	printf(g_bold_red "error" g_reset "\n");
 }
 
 void log_step_success()
 {
-	printf("\x1b[95msuccess\x1b[0m\n");
+	printf(g_fuxia "success" g_reset "\n");
+}
+
+void log_ghost_version(char *version)
+{
+	printf(g_fuxia "  .-.    \n"
+	               " (o o)   " g_yellow "v.%s\n" g_fuxia
+  		       " | O \\_  \n"
+  		       "  `----' \n\n" g_reset, version);
 }
 

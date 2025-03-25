@@ -79,9 +79,9 @@ int __exec(char *cmd_line, int wait)
 	exec_cmdline_to_argv(cmd_line, argv);
 
 	if (wait)
-		log_step("daemon: %s ... ", argv[0]);
-	else
 		log_step("executing: %s ...\n", argv[0]);
+	else
+		log_step("daemon: %s ... ", argv[0]);
 
 	if ((pid = fork()) == 0) {
 		execvp(argv[0], argv);
@@ -90,10 +90,10 @@ int __exec(char *cmd_line, int wait)
 
 		process_save_pid(exec_get_name(argv[0]), (int)pid);
 		/* Avoid zombies, always wait termination */
-		if (wait) {
+		if (wait)
 			waitpid(pid, &status, 0);
+		else
 			log_step_success();
-		}
 	}
 
 	/* We can't succeed here, executing .sh can exec

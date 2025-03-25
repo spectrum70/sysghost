@@ -53,8 +53,10 @@ int mount_check_mounted(char *name, char *mnt_opts)
 	while ((ent = getmntent(f)) != 0) {
 		if (strncmp(name, ent->mnt_fsname, strlen(name)) != 0)
 			continue;
-		if (!mnt_opts)
+		if (!mnt_opts) {
+			ret = 0;
 			break;
+		}
 		if (strncmp(mnt_opts, ent->mnt_opts, strlen(mnt_opts)) == 0) {
 			ret = 0;
 			break;
@@ -273,7 +275,7 @@ int mount_fstab(void)
 			}
 		} else {
 			/* Mount options can be different from initramfs ? */
-			if (mount_check_mounted(name, 0) == 0) {
+			if (mount_check_mounted(dev_name, 0) == 0) {
 				log_skip("%s already mounted, skipping\n",
 				    name);
 				continue;

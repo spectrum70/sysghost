@@ -33,8 +33,8 @@
 
 int main(int argc, char **argv)
 {
-	log(0, SYSGHOST_STR " init system v." VERSION "+"
-	    GIT_VERSION  " starting\n");
+	log(0, SYSGHOST_STR " init system starting\n\n");
+	log_ghost_version(VERSION "+" GIT_VERSION);
 
 	launcher_init();
 
