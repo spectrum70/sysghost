@@ -1,12 +1,16 @@
-# sysghost init system
 
-![Alt text](res/sysghost.png?raw=true "sysghost")
 
-A simple init system, fully configurable, can live installed together with systemd, 
-while not using it.
+<p align="center">
+  <img src="res/sysghost.png" width="100%" title="hover text">
+</p>
+
+
+<p align="center"><b> A simple init system</b></p>
+
+A **fast** and **easy to configure** init system, written in C with a very simple design, features kept at minimum, can be installed together with systemd.
+Versions < 1.00 are alpha, experimental.
 
 (C) 2025 - Angelo Dureghello - kernelspace <angelo@kernel-space.org>
-
 
 ## Build
 ```
