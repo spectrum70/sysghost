@@ -6,7 +6,7 @@ bin_PROGRAMS = sysghost sysdown
 
 sysghost_CPPFLAGS = -Iinclude -DGIT_VERSION='"$(GIT_VERSION)"'
 sysghost_SOURCES = src/main.c \
-		src/log.c \
+		lib/log.c \
 		src/launcher.c \
 		src/mount.c \
 		src/exec.c \
@@ -17,4 +17,5 @@ sysghost_SOURCES = src/main.c \
 		src/monitor.c
 
 sysdown_CPPFLAGS = -Iinclude -DGIT_VERSION='"$(GIT_VERSION)"'
-sysdown_SOURCES = src/sysdown.c
+sysdown_SOURCES = lib/log.c \
+		  src/sysdown.c
