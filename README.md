@@ -1,4 +1,8 @@
-
+[![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/spectrum70/sysghost/graphs/commit-activity)
+[![GitHub branches](https://badgen.net/github/branches/spectrum70/sysghost)](https://github.com/spectrum70/sysghost/)
+[![GitHub commits](https://badgen.net/github/commits/spectrum70/sysghost)](https://GitHub.com/spectrum70/sysghost/commit/)
+[![GitHub forks](https://img.shields.io/github/forks/spectrum70/sysghost.svg?style=social&label=Fork&maxAge=2592000)](https://GitHub.com/spectrum70/sysghost/network/)
 
 <p align="center">
   <img src="res/sysghost.png" width="100%" title="hover text">
