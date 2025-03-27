@@ -28,7 +28,7 @@ Just add sysghost to the kernel command line, as
 ```
 ### Shutdown
 ```
-sudo sysdiown
+sudo sysdown
 ```
 ### Scripts
 Please find sample scripts in the scripts directory.
