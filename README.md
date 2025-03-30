@@ -53,6 +53,11 @@ By default, sysghost uses udevd (systemd-udevd) as a device manager, that is gen
 For this case, udevd.sh script is processed. As default, all devices should be added properly without
 any change to the script.
 
+### Services
+Services are launched in src/launcher.c **lanucher_step_run_services()** function.
+A small common set of services generally needed is launched ad default. Edit **src/launcher.c** and add or remove services as needed,
+or eventually add them from command.sh.
+
 ### command.sh scripts
 Add here whatever additional configuration to be performed at boot.
 
