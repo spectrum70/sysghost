@@ -71,6 +71,9 @@ void launcher_step_virtual_consoles()
 	}
 }
 
+/*
+ * Main idea was to hardcode the services here.
+ */
 void lanucher_step_run_services()
 {
 	int i;
@@ -150,7 +153,9 @@ void launcher_init()
 	launcher_step_mount();
 
 	if (fs_dir_exists("/etc/sysghost")) {
+#ifdef USE_UDEVD
 		exec("/etc/sysghost/udevd.sh");
+#endif
 		exec("/etc/sysghost/commands.sh");
 	}
 
