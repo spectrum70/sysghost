@@ -15,11 +15,10 @@
 
 <p align="center"><b> A simple init system</b></p>
 
-**Note: this is actually a work in progress**
-
 A **fast** and **easy to configure** init system, written in C with a very simple design, features kept at minimum, can be installed together with systemd.
-Versions < 1.00 are alpha, experimental.
-
+```diff
+! Note: versions < 1.00 are alpha, experimental, don't expect too much from them.
+```
 (C) 2025 - Angelo Dureghello - kernelspace <angelo@kernel-space.org>
 
 ## Build
