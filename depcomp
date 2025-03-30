@@ -227,7 +227,7 @@ gcc)
   # letters.
   sed -e 's/^[^:]*: / /' \
       -e 's/^['$alpha']:\/[^:]*: / /' < "$tmpdepfile" >> "$depfile"
-## This next piece of sysghost avoids the "deleted header file" problem.
+## This next piece of magic avoids the "deleted header file" problem.
 ## The problem is that when a header file which appears in a .P file
 ## is deleted, the dependency causes make to die (because there is
 ## typically no way to rebuild the header).  We avoid this by adding

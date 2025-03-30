@@ -33,4 +33,7 @@ AC_C_INLINE
 # Checks for library functions.
 AC_CHECK_FUNCS([memset])
 
+# udevd is the default
+CFLAGS+=" -DUSE_UDEVD"
+
 AC_OUTPUT

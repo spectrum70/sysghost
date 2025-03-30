@@ -88,16 +88,14 @@ void lanucher_step_run_services()
 	}
 }
 
-#define USE_UDEV
-
 void launcher_init()
 {
 	pid_t pid;
-#ifdef USE_UDEV
+#ifdef USE_UDEVD
 	int status;
 #endif
 
-#ifdef USE_UDEV
+#ifdef USE_UDEVD
 	/*
 	 * Very likely, a udevd is mandatory, becouse libinput in wayland
 	 * seems to work only when a udevd is active, and seems there
@@ -144,7 +142,8 @@ void launcher_init()
 	/* Brief pause */
 	sleep(1);
 
-#endif
+#endif /* USE_UDEVD */
+
 	cores = launcher_get_cpus();
 	log_step("available cpu cores: %d \\o/\n", cores);
 
