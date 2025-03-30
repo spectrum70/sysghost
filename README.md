@@ -37,7 +37,7 @@ Just add sysghost to the kernel command line, as
 ```
 
 ### Configuration
-The sysghost init system uses some minimal scripts to setup system confioguration. They are located in
+The sysghost init system uses some minimal scripts to setup system configuration. They are located in
 ```
 ls -al /etc/sysghost
 drwxr-xr-x   2 root root  4096 30 mar 20.41 .
