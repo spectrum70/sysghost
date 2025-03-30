@@ -79,6 +79,7 @@ void lanucher_step_run_services()
 		{"/usr/bin/mkdir /run/dbus"},
 		{"/usr/bin/dbus-daemon --system"},
 		{"/usr/sbin/sshd"},
+		{"/usr/bin/cupsd"},
 		{0},
 	};
 
@@ -105,18 +106,18 @@ void launcher_init()
 	log_step("launching udevd ... ");
 
 	/*
-	 * Modern kernels uses devtmpfs that creates devices nodes
-	 * when the kernel boot. So:
-	 * - some modules are builtin,
-	 * - most of the modules /dev/xxx are created by devtmpfs,
-	 *   since kernel detects most of the devices by pci,
-	 * - udev creates rights and ownership
- 	 * - some other modules (rare) could be loaded by udev /etc/modules.
-	 *
-	 * So: systemd-udevd should be started now but it does not work really
-	 * well, even if it partiall works and there is no easy replacement.
-	 *
-	 * TODO: try mdev, mdevd or some other alternative.
+	 * Modern kernels uses devtmpfs that creates devices nodes when the
+	 * kernel boots. Through devtmpfs, at initramfs stage some devices
+	 * are probed and added to /dev.
+	 * Many other are probed after during the next kernel boot sequence,
+	 * but the uevents for additions of all new devcices can't be seen
+	 * from udevd, since udev is started just after. For this reason, the
+	 * following lines are needed after udevd start:
+	 *   udevadm trigger --action=add --type=subsystems
+	 *   udevadm trigger --action=add --type=devices
+	 *   udevadm settle
+	 * TODO: such lines are now in udevd.sh. See if possible to execute
+	 * those from here.
 	 */
 	if ((pid = fork()) == 0) {
 		int outfd = open("/tmp/udev.tmp",
@@ -132,7 +133,7 @@ void launcher_init()
 
 		execlp("/lib/systemd/systemd-udevd",
 		       "/lib/systemd/systemd-udevd",
-		       "--daemon", "--resolve-names=early", ">/dev/null", NULL);
+		       "--daemon", ">/dev/null", NULL);
 	}
 
 	/* Wait to be launched */
@@ -165,3 +166,4 @@ void launcher_init()
 			"--noclear", "tty1", "38400", "linux", NULL);
 	}
 }
+
