@@ -24,17 +24,19 @@ setup_network()
         WIFI_IF="wlo1"
         NS="1.1.1.1"
 
-        mmsg "net: setup network"
+	sysctl -w net.ipv4.ping_group_range="0 1000" > /dev/null
 
-        sysctl -w net.ipv4.ping_group_range="0 1000" > /dev/null
-
-        # setup localhost
-        ip addr add 127.0.0.1/24 dev lo
-        ip link set dev lo up
+	step "net: setup localhost "
+	ip addr add 127.0.0.1/24 dev lo
+	ip link set dev lo up
+	success
 
         net_wait "${ETH_IF}"
+
+	step "net: setup ${ETH_IF} "
         ip addr add 192.168.0.2/24 dev ${ETH_IF}
         ip link set dev ${ETH_IF} up
+	success
 
         # rfkill unblock wlan
         # net_wait "${WIFI_IF}"
