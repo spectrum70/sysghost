@@ -29,21 +29,37 @@ sudo make install
 ```
 
 ## Usage
-### Boot using sysghost
+
+## Boot using sysghost
 Just add sysghost to the kernel command line, as
 ```
 "root=UUID=3d1c53ef-a4f0-4226-a87c-fb1ac155553b rw loglevel=14 audit=0 init=/usr/local/bin/sysghost"
 ```
+
+### Configuration
+The sysghost init system uses some minimal scripts to setup system confioguration. They are located in
+```
+ls -al /etc/sysghost
+drwxr-xr-x   2 root root  4096 30 mar 20.41 .
+drwxr-xr-x 144 root root 12288 30 mar 10.54 ..
+-rwxr-xr-x   1 root root  1170 30 mar 20.49 commands.sh
+-rw-r--r--   1 root root   210 24 mar 22.19 lib.sh
+-rwxr-xr-x   1 root root   579 30 mar 10.32 udevd.sh
+```
+Check and customize them as needed.
+
+### Device manager
+By default, sysghost uses udevd (systemd-udevd) as a device manager, that is generally installed in the system. 
+For this case, udevd.sh script is processed. As default, all devices should be added properly without
+any change to the script.
+
+### command.sh scripts
+Add here whatever additional configuration to be performed at boot.
+
 ### Shutdown
 ```
 sudo sysdown
 ```
-### Scripts
-Please find sample scripts in the scripts directory.
-Mandatory names that are actually processed from sysghost are:
-```
-/etc/sysghost/udevd.sh
-/etc/sysghost/commands.sh
-```
+
 
 
