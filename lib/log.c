@@ -39,6 +39,15 @@ static int loglevel_max = 12;
 
 #define g_bold_red	esc "1;" g_red
 
+void msg(char *fmt, ...)
+{
+        va_list ap;
+
+        va_start(ap, fmt);
+        vfprintf(stderr, fmt, ap);
+        va_end(ap);
+}
+
 void log(int level, const char *fmt, ...)
 {
 	va_list ap;

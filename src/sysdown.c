@@ -32,6 +32,8 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
+#include "log.h"
+
 #define SYSDOWN_PID	"/var/run/sysdown.pid"
 #define PATH_DEFAULT	"/sbin:/usr/sbin:/bin:/usr/bin"
 
@@ -47,15 +49,6 @@ char *clean_env[] = {
 	"SHELL=/bin/sh",
 	NULL,
 };
-
-void msg(char *fmt, ...)
-{
-	va_list ap;
-
-	va_start(ap, fmt);
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
-}
 
 void usage()
 {
