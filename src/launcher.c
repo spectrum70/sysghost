@@ -83,6 +83,7 @@ void lanucher_step_run_services()
 		{"/usr/bin/dbus-daemon --system"},
 		{"/usr/sbin/sshd"},
 		{"/usr/bin/cupsd"},
+		{"/usr/bin/avahi-daemon"},
 		{0},
 	};
 
