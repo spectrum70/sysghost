@@ -79,7 +79,7 @@ void lanucher_step_run_services()
 		{"/bin/seatd -l silent -g seat >/dev/null"},
 		{"/usr/sbin/sshd"},
 		{"/usr/bin/cupsd"},
-		{"/usr/bin/avahi-daemon -D >/dev/null"},
+		{"/usr/bin/avahi-daemon -D"},
 		{0},
 	};
 
@@ -106,7 +106,7 @@ void launcher_run_dbus()
 		usleep(10000);
 		if (fs_file_dir_exists("/run/dbus/system_bus_socket")) {
 			log_step_success();
-			break;
+			return;
 		}
 	}
 	/* Go on without dbus */
