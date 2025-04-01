@@ -52,8 +52,6 @@ void launcher_step_mount()
 	/* Steps and rrror check inside called functions. */
 	mount_fstab();
 	mount_rest();
-
-	return;
 }
 
 void launcher_step_virtual_consoles()
@@ -81,7 +79,7 @@ void lanucher_step_run_services()
 		{"/bin/seatd -l silent -g seat >/dev/null"},
 		{"/usr/sbin/sshd"},
 		{"/usr/bin/cupsd"},
-		{"/usr/bin/avahi-daemon"},
+		{"/usr/bin/avahi-daemon -D >/dev/null"},
 		{0},
 	};
 
@@ -93,16 +91,17 @@ void lanucher_step_run_services()
 void launcher_run_dbus()
 {
 	int timeout = 500;
+	/* Do not use const, since exec_daemon modify the cmd string. */
+	char cmd_mkdir[] = "/usr/bin/mkdir -p /run/dbus";
+	char cmd_run[] = "/usr/bin/dbus-daemon --system";
 
-	/* exec fails here, to check why */
-	exec_daemon("/usr/bin/mkdir /run/dbus");
-	exec_daemon("/usr/bin/dbus-daemon --system");
+	exec_daemon(cmd_mkdir);
+	exec_daemon(cmd_run);
+
 	/*
 	 * We need to wait (5 seconds) the socket to be up, or
 	 * other services as avahi will fail.
 	 */
-	log_step("waiting for dbus socket ... ");
-
 	for (; timeout; timeout--) {
 		usleep(10000);
 		if (fs_file_dir_exists("/run/dbus/system_bus_socket")) {
@@ -168,21 +167,24 @@ void launcher_init()
 	/* Brief pause */
 	sleep(1);
 
+	/*
+	 * Keeping module probe as a first step after udevd init,
+	 * becouse other services that are run later on may need
+	 * some support from them.
+	 */
+	if (fs_file_dir_exists("/etc/sysghost"))
+		exec("/etc/sysghost/udevd.sh");
+
 #endif /* USE_UDEVD */
 
 	cores = launcher_get_cpus();
 	log_step("available cpu cores: %d \\o/\n", cores);
 
 	launcher_step_mount();
-
-	if (fs_file_dir_exists("/etc/sysghost")) {
-#ifdef USE_UDEVD
-		exec("/etc/sysghost/udevd.sh");
-#endif
-		exec("/etc/sysghost/commands.sh");
-	}
-
 	launcher_run_dbus();
+
+	if (fs_file_dir_exists("/etc/sysghost"))
+		exec("/etc/sysghost/commands.sh");
 
 	launcher_step_virtual_consoles();
 	lanucher_step_run_services();
