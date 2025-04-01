@@ -34,7 +34,7 @@ int process_save_pid(const char *name, int pid)
 {
 	char fname[MAX_PATH] = {0};
 
-	if (!fs_dir_exists(RUN_PID_PATH)) {
+	if (!fs_file_dir_exists(RUN_PID_PATH)) {
 		if (fs_create_dir(RUN_PID_PATH, 0777)) {
 			err("cannot create %s\n", RUN_PID_PATH);
 			return -1;
@@ -54,7 +54,7 @@ int process_running(pid_t pid)
 
 	sprintf(dir_name, "%d", pid);
 
-	return fs_dir_exists(dir_name);
+	return fs_file_dir_exists(dir_name);
 }
 
 int process_kill_by_name(const char *name)

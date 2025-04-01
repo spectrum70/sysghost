@@ -211,7 +211,7 @@ int mount_save_device(char *dev, char *name)
 {
 	char fname[MAX_PATH] = {0};
 
-	if (!fs_dir_exists(MOUNTS_PATH)) {
+	if (!fs_file_dir_exists(MOUNTS_PATH)) {
 		if (fs_create_dir(MOUNTS_PATH, 0777)) {
 			err("cannot create /run/sysghost\n");
 			return -1;

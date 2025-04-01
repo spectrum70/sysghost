@@ -25,7 +25,7 @@
 #include "fs.h"
 #include "log.h"
 
-int fs_dir_exists(const char *path)
+int fs_file_dir_exists(const char *path)
 {
 	struct stat st;
 
