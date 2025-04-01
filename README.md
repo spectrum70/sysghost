@@ -40,6 +40,10 @@ Just add sysghost to the kernel command line, as
 "root=UUID=3d1c53ef-a4f0-4226-a87c-fb1ac155553b rw loglevel=14 audit=0 init=/usr/local/bin/sysghost"
 ```
 
+<p align="center">
+  <img src="res/boot.png" width="70%" title="hover text">
+</p>
+
 ### Configuration
 The sysghost init system uses some minimal scripts to setup system configuration. They are located in
 ```
