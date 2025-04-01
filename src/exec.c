@@ -38,6 +38,9 @@ char *exec_trim_spaces(char *cmd)
 	return cmd;
 }
 
+/*
+ * Do not come with const char here, since we manipulate the string.
+ */
 void exec_cmdline_to_argv(char *cmd_line, char **argv)
 {
 	char *q = cmd_line;
@@ -54,9 +57,7 @@ void exec_cmdline_to_argv(char *cmd_line, char **argv)
 			}
 			q++;
 		}
-
 	} while (*q);
-
 }
 
 const char *exec_get_name(const char *name)
@@ -95,9 +96,6 @@ int __exec(char *cmd_line, int wait)
 		else
 			log_step_success();
 	}
-
-	/* We can't succeed here, executing .sh can exec
-	 * and trace messages from other subtask (inside .sh) */
 
 	return 0;
 }
