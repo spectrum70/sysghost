@@ -147,9 +147,11 @@ void system_down()
 			open("/dev/null", O_RDWR);
 		}
 	}
+
 	/* Special kernel handled files as kmsg and simila other. */
 	for(i = 3; i < 20; i++)
 		close(i);
+
 	/* TODO: mistery from sysvinit, to understand. */
 	close(255);
 
@@ -198,16 +200,16 @@ int get_options(int argc, char **argv)
 		static struct option long_options[] = {
 			{"help", no_argument, 0, 'h'},
 			{"version", no_argument, 0, 'V'},
-			{"reboot", required_argument, 0, 'r'},
+			{"reboot", no_argument, 0, 'r'},
 			{0, 0, 0, 0}
 		};
 
-                c = getopt_long(argc, argv, "hvVr",
+                c = getopt_long(argc, argv, "hVr",
                                 long_options, &option_index);
 
 		if (c == -1) {
-			/* Wrong options */
-			return -1;
+			/* End of options */
+			return 0;
 		}
 
 		switch (c) {
