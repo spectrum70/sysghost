@@ -31,8 +31,11 @@
 #include <sys/wait.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <getopt.h>
 
 #include "log.h"
+
+#define SD_VERSION	"0.90"
 
 #define SYSDOWN_PID	"/var/run/sysdown.pid"
 #define PATH_DEFAULT	"/sbin:/usr/sbin:/bin:/usr/bin"
@@ -41,6 +44,12 @@
 
 extern char *__progname;
 extern char **environ;
+
+enum options {
+	opt_reboot = 1,
+};
+
+static enum options opts;
 
 char *clean_env[] = {
 	"HOME=/",
@@ -52,6 +61,20 @@ char *clean_env[] = {
 
 void usage()
 {
+	msg("Usage: sysdown [option]\n");
+	msg("Example: ./%s -r\n", __progname);
+	msg("Options:\n");
+	msg("  -h,  --help        this help\n");
+	msg("  -r,  --reboot      reboot system\n");
+	msg("  -V,  --version     program version\n");
+
+	exit(-1);
+}
+
+void info()
+{
+	msg("sysdown (C) kernel-space.org - v." SD_VERSION "\n");
+	exit(-1);
 }
 
 void cancel()
@@ -112,7 +135,6 @@ int spawn(int silent, char *prog, ...)
 void system_down()
 {
 	int i;
-	int do_halt = 1;
 
 	/* First close all stdin, stdout and stderr. */
 	for(i = 0; i < 3; i++) {
@@ -148,17 +170,60 @@ void system_down()
 	spawn(1, "quotaoff", "-a", NULL);
 
 	sync();
-	msg("%s: turning off swap\r\n", __progname);
 	spawn(0, "swapoff", "-a", NULL);
-	msg("%s: unmounting all file systems\r\n", __progname);
 	spawn(0, "umount", "-a", NULL);
 
-	if (do_halt) {
-		msg("The system is halted. Press CTRL-ALT-DEL "
-		    "or turn off power\r\n");
-		reboot(RB_HALT_SYSTEM);
+	/* Reboot man page asks this. */
+	sync();
+
+	if (opts & opt_reboot) {
+		reboot(RB_AUTOBOOT);
 		exit(0);
 	}
+
+	reboot(RB_POWER_OFF);
+	exit(0);
+}
+
+int get_options(int argc, char **argv)
+{
+	int c;
+
+	/* No options. */
+	if (argc == 1)
+		return 0;
+
+	for (;;) {
+		int option_index = 0;
+		static struct option long_options[] = {
+			{"help", no_argument, 0, 'h'},
+			{"version", no_argument, 0, 'V'},
+			{"reboot", required_argument, 0, 'r'},
+			{0, 0, 0, 0}
+		};
+
+                c = getopt_long(argc, argv, "hvVr",
+                                long_options, &option_index);
+
+		if (c == -1) {
+			/* Wrong options */
+			return -1;
+		}
+
+		switch (c) {
+		case 'h':
+			usage();
+			break;
+		case 'V':
+			info();
+			break;
+		case 'r':
+			opts |= opt_reboot;
+			break;
+		}
+	}
+
+	return 0;
 }
 
 int main(int argc, char **argv)
@@ -166,6 +231,9 @@ int main(int argc, char **argv)
 	struct sigaction sa;
 	FILE *fp;
 	int pid = 0;
+
+	if (get_options(argc, argv))
+		return -1;
 
 	/*
 	 * From sysvinit. Cannot really understand when/why an error would be
@@ -180,7 +248,6 @@ int main(int argc, char **argv)
 
 	if (getuid() != 0) {
 		msg("%s: only root can do that, exiting\n", __progname);
-		usage();
 		exit(1);
 	}
 
