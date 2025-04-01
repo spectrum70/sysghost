@@ -79,8 +79,6 @@ void lanucher_step_run_services()
 	int i;
 	char list[][MAX_ENTRY] = {
 		{"/bin/seatd -l silent -g seat >/dev/null"},
-		{"/usr/bin/mkdir /run/dbus"},
-		{"/usr/bin/dbus-daemon --system"},
 		{"/usr/sbin/sshd"},
 		{"/usr/bin/cupsd"},
 		{"/usr/bin/avahi-daemon"},
@@ -90,6 +88,30 @@ void lanucher_step_run_services()
 	for (i = 0; *list[i]; i++) {
 		exec_daemon(list[i]);
 	}
+}
+
+void launcher_run_dbus()
+{
+	int timeout = 500;
+
+	/* exec fails here, to check why */
+	exec_daemon("/usr/bin/mkdir /run/dbus");
+	exec_daemon("/usr/bin/dbus-daemon --system");
+	/*
+	 * We need to wait (5 seconds) the socket to be up, or
+	 * other services as avahi will fail.
+	 */
+	log_step("waiting for dbus socket ... ");
+
+	for (; timeout; timeout--) {
+		usleep(10000);
+		if (fs_file_dir_exists("/run/dbus/system_bus_socket")) {
+			log_step_success();
+			break;
+		}
+	}
+	/* Go on without dbus */
+	log_step_err();
 }
 
 void launcher_init()
@@ -153,12 +175,14 @@ void launcher_init()
 
 	launcher_step_mount();
 
-	if (fs_dir_exists("/etc/sysghost")) {
+	if (fs_file_dir_exists("/etc/sysghost")) {
 #ifdef USE_UDEVD
 		exec("/etc/sysghost/udevd.sh");
 #endif
 		exec("/etc/sysghost/commands.sh");
 	}
+
+	launcher_run_dbus();
 
 	launcher_step_virtual_consoles();
 	lanucher_step_run_services();
