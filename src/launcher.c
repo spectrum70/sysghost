@@ -102,6 +102,8 @@ void launcher_run_dbus()
 	 * We need to wait (5 seconds) the socket to be up, or
 	 * other services as avahi will fail.
 	 */
+	log_step("waitinig for dbus socket ... ");
+
 	for (; timeout; timeout--) {
 		usleep(10000);
 		if (fs_file_dir_exists("/run/dbus/system_bus_socket")) {
