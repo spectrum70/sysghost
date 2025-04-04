@@ -19,7 +19,7 @@ AC_MSG_NOTICE(found $PKG_CONFIG)
 CFLAGS="-O3 --pipe -Wall -Wno-builtin-declaration-mismatch"
 
 # Substiture and create Makefile
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile unit/Makefile])
 
 # Checks for libraries.
 
