@@ -48,7 +48,7 @@ void msg(char *fmt, ...)
         va_end(ap);
 }
 
-void log(int level, const char *fmt, ...)
+void sg_log(int level, const char *fmt, ...)
 {
 	va_list ap;
 
