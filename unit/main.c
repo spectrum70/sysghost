@@ -19,15 +19,27 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <unistd.h>
+#include <stdlib.h>
+
 #include "exec.h"
 #include "log.h"
 
 int main(int argc, char **argv)
 {
-	log_step("test: exec_daemon\n");
-	exec_daemon("/usr/sbin/avahi -D");
+	if (getuid() != 0) {
+		msg("please run the test as root.\n");
+		exit(1);
+	}
+
+	log_step("test: exec_daemon (should fail)\n");
+	exec_daemon("/usr/sbin/avahi-daemon -D -a2 -a3 -a4 -a5");
+
+	log_step("test: exec_daemon (should succeed)\n");
+	exec_daemon("/usr/sbin/avahi-daemon -D -s");
+
+	log_step("test: completed\n");
 
 	return 0;
 }
-
 
