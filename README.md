@@ -70,9 +70,22 @@ or eventually add them from command.sh.
 Add here whatever additional configuration to be performed at boot.
 
 ### Shutdown
+By default, sysdown just power down the pc.
 ```
-sudo sysdown
+$ sudo sysdown
+
+$ sysdown --help                                                                                           ✔ 
+Usage: sysdown [option]
+Example: ./sysdown -r
+Options:
+  -h,  --help        this help
+  -r,  --reboot      reboot system
+  -V,  --version     program version
 ```
 
-
+### Unit test
+Unit test can be executed by:
+```
+sudo unit/sysunit
+```
 
