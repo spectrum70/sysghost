@@ -191,8 +191,6 @@ void launcher_init()
 
 	launcher_step_virtual_consoles();
 
-	sleep(1);
-
 	if ((pid = fork()) == 0) {
 		/* Child */
 		execlp("/sbin/agetty", "/sbin/agetty",
