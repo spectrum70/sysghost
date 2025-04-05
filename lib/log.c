@@ -21,6 +21,7 @@
 
 #include "log.h"
 
+#include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -38,6 +39,23 @@ static int loglevel_max = 12;
 #define g_reset		esc "0m"
 
 #define g_bold_red	esc "1;" g_red
+
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void dbg(char *fmt, ...)
+{
+#ifdef DEBUG
+	va_list ap;
+
+	pthread_mutex_lock(&mutex);
+
+        va_start(ap, fmt);
+        vfprintf(stderr, fmt, ap);
+        va_end(ap);
+
+        pthread_mutex_unlock(&mutex);
+#endif
+}
 
 void msg(char *fmt, ...)
 {
@@ -90,33 +108,45 @@ void log_step(char *fmt, ...)
 {
 	va_list ap;
 
+	pthread_mutex_lock(&mutex);
+
 	va_start(ap, fmt);
 	printf(g_fuxia "● " g_reset);
 	vprintf(fmt, ap);
 	fflush(stdout);
 
 	va_end(ap);
+
+	pthread_mutex_unlock(&mutex);
 }
 
 void log_skip(char *fmt, ...)
 {
 	va_list ap;
 
+	pthread_mutex_lock(&mutex);
+
 	va_start(ap, fmt);
 	printf(g_gray "● " g_reset);
 	vprintf(fmt, ap);
 
 	va_end(ap);
+
+	pthread_mutex_unlock(&mutex);
 }
 
 void log_step_err()
 {
+	pthread_mutex_lock(&mutex);
 	printf(g_bold_red "error" g_reset "\n");
+	pthread_mutex_unlock(&mutex);
 }
 
 void log_step_success()
 {
+	pthread_mutex_lock(&mutex);
 	printf(g_fuxia "success" g_reset "\n");
+	pthread_mutex_unlock(&mutex);
 }
 
 void log_ghost_version(char *version)

@@ -13,4 +13,6 @@ void log_step_success();
 void log_step_err();
 void log_ghost_version(char *version);
 
+void dbg(char *fmt, ...);
+
 #endif /* log_h */
