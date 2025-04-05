@@ -174,17 +174,21 @@ static int __exec(char *cmd_line, int daemon)
 		exit(errno);
 		/* Waitpid will catch the error. */
 	} else {
-		int status;
+		int status, ret;
 
 		/* Avoid zombies, always wait termination */
-		waitpid(pid, &status, 0);
+		ret = waitpid(pid, &status, WNOHANG);
 
 		if (daemon) {
 			if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
 				process_save_pid(argv[0], (int)pid);
 				log_step_success();
-			} else
+			} else if (ret == 0) {
+				/* Daemon is an app, WNOHANG case. */
+				log_step_success();
+			} else {
 				log_step_err();
+			}
 		}
 	}
 
