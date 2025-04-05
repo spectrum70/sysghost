@@ -147,6 +147,12 @@ static int __exec(char *cmd_line, int daemon)
 	if (ret)
 		return ret;
 
+	/*
+	 * Some daemon as sshd wants argv[0] as an absolute path.
+	 * As of now, let's set it for all, since it always work.
+	 */
+	strcpy(argv[0], abs_name);
+
 	exec_cmdline_to_argv(cmd_line, argv);
 
 	dbg("%s() %s: %s %s %s %s %s %s %s\n", __func__, abs_name,
@@ -177,9 +183,11 @@ static int __exec(char *cmd_line, int daemon)
 		int status, ret;
 
 		/* Avoid zombies, always wait termination */
-		ret = waitpid(pid, &status, WNOHANG);
 
 		if (daemon) {
+			/* Some daemon can stay in fg as seatd. Using WNOHANG. */
+			ret = waitpid(pid, &status, WNOHANG);
+
 			if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
 				process_save_pid(argv[0], (int)pid);
 				log_step_success();
@@ -189,6 +197,12 @@ static int __exec(char *cmd_line, int daemon)
 			} else {
 				log_step_err();
 			}
+		} else {
+			/*
+			 * Exec must return, or scripts as command.sh
+			 * completes after tty start.
+			 */
+			waitpid(pid, &status, 0);
 		}
 	}
 
