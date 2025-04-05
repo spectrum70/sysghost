@@ -23,6 +23,8 @@
 #define _GNU_SOURCE
 #endif
 
+#include <stdio.h>
+
 #include <fcntl.h>
 #include <sched.h>
 #include <sys/wait.h>
@@ -166,9 +168,6 @@ void launcher_init()
 
 	log_step_success();
 
-	/* Brief pause */
-	sleep(1);
-
 	/*
 	 * Keeping module probe as a first step after udevd init,
 	 * becouse other services that are run later on may need
@@ -188,8 +187,9 @@ void launcher_init()
 	if (fs_file_dir_exists("/etc/sysghost"))
 		exec("/etc/sysghost/commands.sh");
 
-	launcher_step_virtual_consoles();
 	lanucher_step_run_services();
+
+	launcher_step_virtual_consoles();
 
 	sleep(1);
 

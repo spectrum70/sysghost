@@ -19,82 +19,173 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <unistd.h>
+#include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
-#include "log.h"
 #include "exec.h"
+#include "log.h"
 #include "process.h"
 
-#define MAX_ARGV	128
+#define MAX_ARGS	32
+#define MAX_ARG_LEN	32
+#define MAX_PATH	512
 
-char *exec_trim_spaces(char *cmd)
+static char *exec_trim_spaces(char *str)
 {
-	while (*cmd && *cmd == ' ')
-		cmd++;
+	while (*str && *str == ' ')
+		str++;
 
-	return cmd;
+	return str;
+}
+
+static char *exec_fetch_arg(char *string, char *arg)
+{
+	char *p, *q;
+
+	if (!string || !*string)
+		return 0;
+
+	q = exec_trim_spaces(string);
+	if (!*q)
+		return 0;
+
+	p = strchr(q, ' ');
+	if (!p)
+		p = string + strlen(string);
+
+	strncpy(arg, q, p - q);
+	arg[p - q] = 0;
+
+	return (*p == 0) ? 0 : ++p;
 }
 
 /*
  * Do not come with const char here, since we manipulate the string.
  */
-void exec_cmdline_to_argv(char *cmd_line, char **argv)
+static void exec_cmdline_to_argv(char *cmd_line, char **argv)
 {
 	char *q = cmd_line;
-	int i = 0;
+	int i = 1;
 
-	do {
-		q = exec_trim_spaces(q);
-		argv[i++] = q;
-
-		while (*q) {
-			if (*q == ' ') {
-				*q++ = 0;
-				break;
-			}
-			q++;
-		}
-	} while (*q);
-}
-
-const char *exec_get_name(const char *name)
-{
-	const char *p = name, *rval = 0;
-
-	while (*p) {
-		if (*p++ == '/')
-			rval = p;
+	/* Discard name with path, name only is retrieved before. */
+	q = exec_fetch_arg(q, argv[i]);
+	if (!q) {
+		argv[i] = 0;
+		return;
 	}
 
-	return rval;
+	do {
+		q = exec_fetch_arg(q, argv[i++]);
+	} while (q && *q);
+
+	/* Termination, should not be needed but just safe to do it. */
+	argv[i] = 0;
 }
 
-int __exec(char *cmd_line, int wait)
+static int exec_cmdline_get_path_name(const char *cmd_line,
+				      char *path, char *name)
 {
+	const char *p = cmd_line;
+	const char *endp;
+
+	if (cmd_line == 0)
+		return -1;
+
+	while (*p != 0 && *p != ' ')
+		p++;
+
+	if (p == cmd_line)
+		return -1;
+
+	strncpy(path, cmd_line, p - cmd_line);
+
+	endp = p;
+	while (*p != '/' && p != path)
+		p--;
+
+	if (*p == '/')
+		p++;
+
+	strncpy(name, p, endp - p);
+
+	return 0;
+}
+
+static int exec_build_argv(char **argv)
+{
+	int i;
+
+	for (i = 0; i < MAX_ARGS; ++i) {
+		argv[i] = malloc(MAX_ARG_LEN);
+		if (argv[i] == NULL)
+			return -ENOMEM;
+		memset(argv[i], 0, MAX_ARG_LEN);
+	}
+
+	return 0;
+}
+
+static int __exec(char *cmd_line, int daemon)
+{
+	char abs_name[MAX_PATH] = {0};
+	char *argv[MAX_ARGS] = {0};
 	pid_t pid;
-	char *argv[MAX_ARGV] = {0};
+	int ret;
+
+	dbg("%s() cmd_line: %s\n", __func__, cmd_line);
+
+	ret = exec_build_argv(argv);
+	if (ret)
+		return ret;
+
+	ret = exec_cmdline_get_path_name(cmd_line, abs_name, argv[0]);
+	if (ret)
+		return ret;
 
 	exec_cmdline_to_argv(cmd_line, argv);
 
-	if (wait)
+	dbg("%s() %s: %s %s %s %s %s %s %s\n", __func__, abs_name,
+		argv[0] ?: "null",
+		argv[1] ?: "null",
+		argv[2] ?: "null",
+		argv[3] ?: "null",
+		argv[4] ?: "null",
+		argv[5] ?: "null",
+		argv[6] ?: "null");
+
+	if (!daemon)
 		log_step("executing: %s ...\n", argv[0]);
 	else
-		log_step("daemon: %s ... ", argv[0]);
+		log_step("daemon: starting %s ... ", argv[0]);
 
 	if ((pid = fork()) == 0) {
-		execvp(argv[0], argv);
+		/*
+		 * We need execv("/bin/ls", array);
+		 * with first arg of array to be ls.
+		 */
+		execvp(abs_name, argv);
+
+		dbg("(execvp errno: -%d %s) ", errno, strerror(errno));
+		exit(errno);
+		/* Waitpid will catch the error. */
 	} else {
 		int status;
 
-		process_save_pid(exec_get_name(argv[0]), (int)pid);
 		/* Avoid zombies, always wait termination */
-		if (wait)
-			waitpid(pid, &status, 0);
-		else
-			log_step_success();
+		waitpid(pid, &status, 0);
+
+		if (daemon) {
+			if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+				process_save_pid(argv[0], (int)pid);
+				log_step_success();
+			} else
+				log_step_err();
+		}
 	}
 
 	return 0;
@@ -102,11 +193,11 @@ int __exec(char *cmd_line, int wait)
 
 int exec(char *cmd_line)
 {
-	return __exec(cmd_line, 1);
+	return __exec(cmd_line, 0);
 }
 
 /* For daemons, we cannot wait termination. */
 int exec_daemon(char *cmd_line)
 {
-	return __exec(cmd_line, 0);
+	return __exec(cmd_line, 1);
 }
