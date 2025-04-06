@@ -150,6 +150,11 @@ Unit test can be executed by:
 sudo unit/sysunit
 ```
 
+### To avoid systemd/redhat tools, suggested alternatives
+**metalog** for logging, logs in /var/log/everything/current,
+**uam** usb automount without polkit/systemd (build it from sources),
+
+
 ### Credits
 If you liked this init, you can send an email to <angelo@kernel-space.org> to say thanks,
 so that i know someone appreciated it.
