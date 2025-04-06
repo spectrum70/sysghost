@@ -151,8 +151,8 @@ sudo unit/sysunit
 ```
 
 ### To avoid systemd/redhat tools, suggested alternatives
-**metalog** for logging, logs in /var/log/everything/current,
-**uam** usb automount without polkit/systemd (build it from sources),
+**metalog** for logging, logs in /var/log/everything/current,<br>
+**uam** usb automount without polkit/systemd (build it from sources),<br>
 
 
 ### Credits
