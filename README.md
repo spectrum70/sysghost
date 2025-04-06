@@ -17,7 +17,9 @@
 
 <p align="center"><b> A simple init system</b></p>
 
-A **fast** and **easy to configure** init system, written in C with a very simple design, features kept at minimum, can be installed together with systemd.
+A **fast** and **basic** init system, written in C with a very simple design, features kept at minimum to leave to the user more freedom customizing the boot strategy
+as preferred. C code should be clear and well readable, and easy to modify or extended as needed. The **sysghost** init is, at the current stage, meant to be installed together with systemd,
+since some services as systemd-udevd are used by default. Code can be easily modified to avoid totally any systemd stuff.
 ```diff
 ! Note: versions < 1.00 are alpha, experimental, don't expect too much from them.
 + Note: without systemd, some comfortable features of your system will be missing.
@@ -45,7 +47,35 @@ Just add sysghost to the kernel command line, as
 </p>
 
 ### Configuration
-The sysghost init system uses some minimal scripts to setup system configuration. They are located in
+The sysghost init system is designed to launch a minimal set of services just after the early
+initializations as udevd, and mount. The list of services is actually harcoded, to keep
+the sequential boot process as fast as possible.</br>
+Many distro as default install systemd, that comes together with other Red Hat stuff, sysghost actually
+uses such tools as default in the init process (udevd, dbus, cupsd, ...).
+
+Edit and change this list as needed in **src/launcher.c**:
+```
+/*
+ * Main idea was to hardcode the services here.
+ */
+void lanucher_step_run_services()
+{
+	int i;
+	char list[][MAX_ENTRY] = {
+		{"/bin/seatd -l silent -g seat >/dev/null"},
+		{"/usr/sbin/sshd"},
+		{"/usr/bin/cupsd"},
+		{"/usr/bin/avahi-daemon -D"},
+		{0},
+	};
+
+	for (i = 0; *list[i]; i++) {
+		exec_daemon(list[i]);
+	}
+}     
+```
+
+Then, sysghost uses some minimal scripts to setup system configuration. They are located in
 ```
 ls -al /etc/sysghost
 drwxr-xr-x   2 root root  4096 30 mar 20.41 .
@@ -54,20 +84,51 @@ drwxr-xr-x 144 root root 12288 30 mar 10.54 ..
 -rw-r--r--   1 root root   210 24 mar 22.19 lib.sh
 -rwxr-xr-x   1 root root   579 30 mar 10.32 udevd.sh
 ```
-Check and customize them as needed.
+The **lib.sh** is a common library included in each script. Check sample scripts installed and customize them as needed.
 
 ### Device manager
 By default, sysghost uses udevd (systemd-udevd) as a device manager, that is generally installed in the system. 
 For this case, udevd.sh script is processed. As default, all devices should be added properly without
 any change to the script.
 
-### Services
-Services are launched in src/launcher.c **lanucher_step_run_services()** function.
-A small common set of services generally needed is launched ad default. Edit **src/launcher.c** and add or remove services as needed,
-or eventually add them from command.sh.
-
 ### command.sh scripts
-Add here whatever additional configuration to be performed at boot.
+Add here whatever additional configuration to be performed at boot. Additional services can be executed form here.
+
+### Boot sequence
+```
+                     ________________________                  
+                    |     udevd, udevd.sh    |      actually, systemd-udevd is the default/only device manager               
+                    | get all uevents,       |      src/launcher.c, etc/sysghost/udevd.sh
+                    | modprobe, add devices  |
+                    | apply rules            | 
+                    |________________________|
+                                 |
+                     ________________________                  
+                    |      mount (fstab)     |     src/launcher.c
+                    |________________________|
+                                 |
+                     ________________________                  
+                    |     run system dbus    |     src/launcher.c    
+                    |________________________|
+                                 |
+                     ________________________                  
+                    |       command.sh       |     etc/sysghost/command.sh              
+                    |________________________|
+                                 |
+                     ________________________
+                    |      run_services()    |     src/launcher.c, lanucher_step_run_services()
+                    |________________________|
+                                 |
+                     ________________________
+                    |     creates virtual    |     src/launcher.c
+                    |         consoles       |     creates 4 virtual consoles
+                    |________________________|
+                                 |
+                     ________________________
+                    |          login         |     src/launcher.c
+                    |________________________|
+```
+
 
 ### Shutdown
 By default, sysdown just power down the pc.
@@ -88,4 +149,8 @@ Unit test can be executed by:
 ```
 sudo unit/sysunit
 ```
+
+### Credits
+If you liked this init, you can send an email to <angelo@kernel-space.org> to say thanks,
+so that i know someone appreciated it.
 
