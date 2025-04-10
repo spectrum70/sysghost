@@ -2,6 +2,12 @@
 #
 # magic command sequence, for fast boot
 # (C) 2025 kernel-space.org
+#
+# This file is an example of a command sequence that will be executed
+# after kernel module loading. Please check the README file to see where
+# commands.sh is executed in the boot sequence.
+# The lib.sh provides some useful functions for message output or
+# starting sockets.
 
 source /etc/sysghost/lib.sh
 
@@ -21,7 +27,7 @@ net_wait()
 setup_network()
 {
         ETH_IF="enp12s0"
-        WIFI_IF="wlo1"
+        # WIFI_IF="wlo1"
         NS="1.1.1.1"
 
 	sysctl -w net.ipv4.ping_group_range="0 1000" > /dev/null
@@ -54,5 +60,8 @@ setup_network()
 }
 
 setup_network
+
+# start additional services here ...
+start_service("/usr/sbin/cups");
 
 # do anything else here
