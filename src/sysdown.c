@@ -34,6 +34,7 @@
 #include <getopt.h>
 
 #include "log.h"
+#include "fs.h"
 
 #define SD_VERSION	"0.90"
 
@@ -77,7 +78,7 @@ void info()
 	exit(-1);
 }
 
-void cancel()
+void cancel(int val)
 {
 	exit(-1);
 }
@@ -271,6 +272,8 @@ int main(int argc, char **argv)
 		msg("%s: chdir(/): %m\n", __progname);
 		exit(1);
 	}
+
+	fs_touch("/forcefsck");
 
 	/* Create a new PID file. */
 	unlink(SYSDOWN_PID);

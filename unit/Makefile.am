@@ -7,6 +7,6 @@ bin_PROGRAMS = sysunit
 sysunit_CPPFLAGS =-O0 -g -ggdb -I../include -DDEBUG  -DGIT_VERSION='"$(GIT_VERSION)"'
 sysunit_SOURCES = main.c \
 		   ../lib/log.c \
-		   ../src/fs.c \
+		   ../lib/fs.c \
 		   ../src/process.c \
 		   ../src/exec.c

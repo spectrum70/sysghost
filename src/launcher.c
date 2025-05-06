@@ -150,7 +150,7 @@ void launcher_init()
 		int outfd = open("/tmp/udev.tmp",
 				 O_CREAT | O_WRONLY | O_TRUNC, 0644);
 		if (!outfd) {
-			log_step_err("failed to launch udevd, please reboot\n");
+			log_step_err();
 			return;
 		}
 

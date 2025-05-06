@@ -19,6 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <unistd.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -105,4 +107,16 @@ int fs_file_read_str(const char *path, char *str)
 	fclose(f);
 
 	return rval;
+}
+
+int fs_touch(const char *filename)
+{
+	int fd = open(filename, O_CREAT | S_IRUSR | S_IWUSR);
+
+	if (fd == -1)
+       		 return fd;
+
+	close(fd);
+
+	return 0;
 }

@@ -10,5 +10,6 @@ int fs_create_file_write_int(char *path, int num);
 int fs_create_file_write_str(char *path, char *str);
 int fs_file_read_int(const char *path, int *num);
 int fs_file_read_str(const char *path, char *str);
+int fs_touch(const char *filename);
 
 #endif /* fs_h */
