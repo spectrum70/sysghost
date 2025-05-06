@@ -79,7 +79,7 @@ int process_kill_by_name(const char *name)
 			}
 
 			if (timeout < 0) {
-				log_step_err("cannot kill process, skipping\n");
+				log_step_err();
 				return -1;
 			}
 

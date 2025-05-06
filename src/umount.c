@@ -101,7 +101,7 @@ int umount_rootfs(void)
 	chdir("/tmp");
 
 	if (syscall(SYS_pivot_root, ".", ".")) {
-		log_step_err("pivot_root failed.\n");
+		log_step_err();
 		return -1;
 	}
 
@@ -111,7 +111,7 @@ int umount_rootfs(void)
 	sleep(1);
 
 	if (umount2(".", MNT_DETACH)) {
-		log_step_err("rootfs umount failed.\n");
+		log_step_err();
 		return -1;
 	}
 
@@ -128,7 +128,7 @@ void umount_all(void)
 
 	log_step("unmounting efi partition ...\n");
 	if (umount2("/boot", MNT_DETACH))
-		log_step_err("unmount failed.\n");
+		log_step_err();
 
 	timeout = 3000000 / UMOUNT_US_INTERVAL;
 
@@ -137,7 +137,7 @@ void umount_all(void)
 	}
 
 	if (timeout < 0) {
-		log_step_err("unmount timeout.\n");
+		log_step_err();
 	}
 
 	log_step("unmounting efi done\n");
@@ -145,7 +145,7 @@ void umount_all(void)
 	log_step("unmounting rootfs\n");
 
 	if (umount_rootfs()) {
-		log_step_err("failed to unmount rootfs\n");
+		log_step_err();
 		return;
 	}
 
