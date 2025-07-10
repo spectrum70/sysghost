@@ -1,6 +1,7 @@
 AC_PREREQ([2.69])
 AC_INIT([sysghost], [0.92(alpha)], [angelo@kernel-space.org], [sysghost], [http://www.kernel-space.org/])
 AM_INIT_AUTOMAKE(subdir-objects)
+AC_PROG_RANLIB
 
 # Checks for programs.
 AC_PROG_CC
@@ -19,7 +20,7 @@ AC_MSG_NOTICE(found $PKG_CONFIG)
 CFLAGS="-O3 --pipe -Wall -Wno-builtin-declaration-mismatch"
 
 # Substiture and create Makefile
-AC_CONFIG_FILES([Makefile src/Makefile unit/Makefile])
+AC_CONFIG_FILES([Makefile lib/Makefile src/Makefile unit/Makefile])
 
 # Checks for libraries.
 

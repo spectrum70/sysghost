@@ -1,0 +1,4 @@
+Tests after adding hddown part
+
+Reboot from console, root, aftert login:                     fs clean
+Reboot from console, wayland up, virtual console as root:    fs clean

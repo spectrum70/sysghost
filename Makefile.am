@@ -1,1 +1,1 @@
-SUBDIRS = src unit
+SUBDIRS = lib src unit

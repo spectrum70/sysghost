@@ -21,20 +21,20 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/reboot.h>
-#include <sys/stat.h>
-#include <sys/wait.h>
-#include <sys/syscall.h>
 #include <unistd.h>
 #include <getopt.h>
 
-#include "log.h"
+#include <sys/reboot.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+
 #include "fs.h"
+#include "hdutils.h"
+#include "log.h"
 
 #define SD_VERSION	"0.90"
 
@@ -138,11 +138,11 @@ void system_down()
 	int i;
 
 	/* First close all stdin, stdout and stderr. */
-	for(i = 0; i < 3; i++) {
+	for(i = 2; i < 3; i++) {
 		if (!isatty(i)) {
 			/*
-			 * From sysvinit, a bit of a mistery. What opening
-			 * /dev&/null is needed for ?
+			 * Opening /dev/null with same number would cause
+			 * messages to go there from now on.
 			 */
 			close(i);
 			open("/dev/null", O_RDWR);
@@ -164,22 +164,24 @@ void system_down()
 	}
 
 	/* Kill all processes. */
-	msg("%s: sending all processes the TERM signal...\r\n", __progname);
 	kill(-1, SIGTERM);
 	sleep(WAIT_BETWEEN_SIGNALS);
-	msg("%s: sending all processes the KILL signal.\r\n", __progname);
 	(void) kill(-1, SIGKILL);
 
-	spawn(1, "quotaoff", "-a", NULL);
+	/* Kill init now */
+	//kill(1, SIGKILL);
+
+	//spawn(1, "quotaoff", "-a", NULL);
 
 	sync();
 	spawn(0, "swapoff", "-a", NULL);
 	spawn(0, "umount", "-a", NULL);
 
-	/* Reboot man page asks this. */
 	sync();
+	hdflush();
 
 	if (opts & opt_reboot) {
+		sync();
 		reboot(RB_AUTOBOOT);
 		exit(0);
 	}
@@ -273,11 +275,16 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
+	msg("asking for forcefsck\n");
+
 	fs_touch("/forcefsck");
 
+	msg("unlink and create new PID\n");
 	/* Create a new PID file. */
 	unlink(SYSDOWN_PID);
 	umask(022);
+
+	msg("catching signals ...\n");
 
 	/* Catch some signals. */
 	signal(SIGQUIT, SIG_IGN);
