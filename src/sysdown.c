@@ -171,6 +171,10 @@ void system_down()
 	/* Kill init now */
 	//kill(1, SIGKILL);
 
+	/*
+	 * To clarify it this is really blocking the shutdown
+	 * and what
+	 */
 	//spawn(1, "quotaoff", "-a", NULL);
 
 	sync();
@@ -207,8 +211,8 @@ int get_options(int argc, char **argv)
 			{0, 0, 0, 0}
 		};
 
-                c = getopt_long(argc, argv, "hVr",
-                                long_options, &option_index);
+		c = getopt_long(argc, argv, "hVr",
+				long_options, &option_index);
 
 		if (c == -1) {
 			/* End of options */
