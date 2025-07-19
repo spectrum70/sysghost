@@ -20,26 +20,32 @@
  */
 
 #include <signal.h>
-#include <sys/wait.h>
+#include <stdlib.h>
 #include <unistd.h>
+
+#include <sys/wait.h>
 
 #include "log.h"
 #include "powerdown.h"
 
 void monitor_handler(int signum)
 {
-	//if (signum == SIGUSR1) {
-	//	powerdown_exec();
-	//}
+	if (signum == SIGTSTP)
+		pause();
+
+	if (signum == SIGKILL || signum == SIGQUIT)
+		exit(0);
 }
 
 int monitor_run(void)
 {
-	//signal(SIGUSR1, monitor_handler);
+	signal(SIGKILL, monitor_handler);
+	signal(SIGTSTP, monitor_handler);
+	signal(SIGQUIT, monitor_handler);
 
 	for (;;) {
 		waitpid(-1, NULL, WNOHANG);
-		sleep(1);
+		usleep(50);
 	}
 
 	return 0;

@@ -169,7 +169,7 @@ void system_down()
 	(void) kill(-1, SIGKILL);
 
 	/* Kill init now */
-	//kill(1, SIGKILL);
+	kill(1, SIGKILL);
 
 	/*
 	 * To clarify it this is really blocking the shutdown
@@ -181,16 +181,14 @@ void system_down()
 	spawn(0, "swapoff", "-a", NULL);
 	spawn(0, "umount", "-a", NULL);
 
-	sync();
 	hdflush();
+	sync();
 
 	if (opts & opt_reboot) {
-		sync();
 		reboot(RB_AUTOBOOT);
-		exit(0);
+	} else {
+		reboot(RB_POWER_OFF);
 	}
-
-	reboot(RB_POWER_OFF);
 	exit(0);
 }
 
