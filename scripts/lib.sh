@@ -7,7 +7,7 @@ success()
 
 error()
 {
-	echo -e "\x1b[94merror\x1b[0m"
+	echo -e "\x1b[91merror\x1b[0m"
 }
 
 step()
@@ -30,4 +30,3 @@ start_service()
 		error
 	fi
 }
-
