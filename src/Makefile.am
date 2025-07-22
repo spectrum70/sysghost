@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS = -Wno-portability
 
-GIT_VERSION = $(shell git describe --abbrev=8 --dirty --always --tags)
+GIT_VERSION = $(shell git describe --abbrev=12 --dirty --always)
 
 bin_PROGRAMS = sysghost sysdown
 
