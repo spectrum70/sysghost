@@ -35,30 +35,19 @@
 #include "fs.h"
 #include "hdutils.h"
 #include "log.h"
+#include "socket.h"
 
 #define SD_VERSION	"0.90"
 
 #define SYSDOWN_PID	"/var/run/sysdown.pid"
-#define PATH_DEFAULT	"/sbin:/usr/sbin:/bin:/usr/bin"
-
-#define WAIT_BETWEEN_SIGNALS	3
 
 extern char *__progname;
-extern char **environ;
 
 enum options {
 	opt_reboot = 1,
 };
 
 static enum options opts;
-
-char *clean_env[] = {
-	"HOME=/",
-	"PATH=" PATH_DEFAULT,
-	"TERM=dumb",
-	"SHELL=/bin/sh",
-	NULL,
-};
 
 void usage()
 {
@@ -81,115 +70,6 @@ void info()
 void cancel(int val)
 {
 	exit(-1);
-}
-
-int spawn(int silent, char *prog, ...)
-{
-	va_list ap;
-	pid_t   pid, rc;
-	int     i = 0;
-	char    *argv[8];
-
-	while ((pid = fork()) < 0 && i < 10) {
-		perror("fork");
-		sleep(3);
-		i++;
-	}
-
-	if (pid < 0)
-		return -1;
-
-	if (pid > 0) {
-		/* We are the parent here, waiting child to terminate. */
-		while ((rc = wait(&i)) != pid) {
-			if (rc < 0 && errno == ECHILD)
-				break;
-		}
-		return (rc == pid) ? WEXITSTATUS(i) : -1;
-	}
-
-	/* Child has the job to shutdown. */
-	if (silent)
-		fclose(stderr);
-
-	argv[0] = prog;
-	va_start(ap, prog);
-	for (i = 1; i < 7 && (argv[i] = va_arg(ap, char *)) != NULL; i++)
-		;
-	argv[i] = NULL;
-	va_end(ap);
-
-	if (chdir("/"))
-		exit(1);
-
-	/* Cleanup environment. */
-	environ = clean_env;
-
-	execvp(argv[0], argv);
-	perror(argv[0]);
-	exit(1);
-
-	/*NOTREACHED*/
-	return 0;
-}
-
-void system_down()
-{
-	int i;
-
-	/* First close all stdin, stdout and stderr. */
-	for(i = 2; i < 3; i++) {
-		if (!isatty(i)) {
-			/*
-			 * Opening /dev/null with same number would cause
-			 * messages to go there from now on.
-			 */
-			close(i);
-			open("/dev/null", O_RDWR);
-		}
-	}
-
-	/* Special kernel handled files as kmsg and simila other. */
-	for(i = 3; i < 20; i++)
-		close(i);
-
-	/* TODO: mistery from sysvinit, to understand. */
-	close(255);
-
-	/* First idle init. */
-	if (kill(1, SIGTSTP) < 0) {
-		msg("%s: can't idle init: %s.\r\n",
-		    __progname, strerror(errno));
-		exit(1);
-	}
-
-	/* Kill all processes. */
-	kill(-1, SIGTERM);
-	sleep(WAIT_BETWEEN_SIGNALS);
-	(void) kill(-1, SIGKILL);
-
-	/* Kill init now */
-	kill(1, SIGKILL);
-
-	/*
-	 * To clarify it this is really blocking the shutdown
-	 * and what
-	 */
-	//spawn(1, "quotaoff", "-a", NULL);
-
-	sync();
-	spawn(0, "swapoff", "-a", NULL);
-	spawn(0, "umount", "-a", NULL);
-
-	hdflush();
-	sync();
-
-	if (opts & opt_reboot) {
-		reboot(RB_AUTOBOOT);
-	} else {
-		reboot(RB_POWER_OFF);
-	}
-	exit(0);
 }
 
 int get_options(int argc, char **argv)
@@ -233,6 +113,11 @@ int get_options(int argc, char **argv)
 	return 0;
 }
 
+/*
+ * sysdown should uses kill -1, so also sudo get killed and sudo sysdown would
+ * not work. So, keeping sysghost as suid, as pid 1, by a signakl it can
+ * perform the shudtown properly.
+ */
 int main(int argc, char **argv)
 {
 	struct sigaction sa;
@@ -300,11 +185,16 @@ int main(int argc, char **argv)
 	sa.sa_handler = cancel;
 	sigaction(SIGINT, &sa, NULL);
 
-	/* TODO: warn to all and library for it. */
-	// wall()
+	/* TODO: warn all */
 
-	system_down();
+	/* start sysdown by pid \1 here */
+	if (opts & opt_reboot) {
+	/* Communicate to init by unix socket */
+		ux_client_write("/tmp/sg/init", "reboot\n");
+	}
 
-	/* NOTREACHED */
-	return 0;
+	ux_client_write("/tmp/sg/init", "shutdown\n");
+
+	/* Exit asap, allow init to umount. */
+	exit(0);
 }

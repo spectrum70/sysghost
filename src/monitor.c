@@ -19,16 +19,24 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <pthread.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <sys/wait.h>
 
 #include "log.h"
-#include "powerdown.h"
+#include "halt.h"
+#include "socket.h"
 
-void monitor_handler(int signum)
+enum {
+	ST_WAITING,
+	ST_CONNECTED,
+};
+
+static void monitor_handler(int signum)
 {
 	if (signum == SIGTSTP)
 		pause();
@@ -37,15 +45,64 @@ void monitor_handler(int signum)
 		exit(0);
 }
 
+static void check_for_task(int fd)
+{
+	char buff[1024];
+	static int status = ST_WAITING;
+	static int cfd;
+
+	switch (status) {
+	default:
+	case ST_WAITING:
+		cfd = ux_server_accept(fd);
+		if (cfd != -1)
+			status = ST_CONNECTED;
+		break;
+	case ST_CONNECTED:
+		if (ux_server_read_cmd(cfd, buff) > 0) {
+			if (strncmp(buff, "shutdown", 8) == 0) {
+				/* Close the server, waitng sysdown to exit */
+				close(fd);
+				sleep(1);
+				sync();
+				/* Shutdown the system now */
+				system_down(0);
+			}
+			status = ST_WAITING;
+		}
+		break;
+	}
+}
+
+void *ux_server_run()
+{
+	int fd;
+
+	fd = ux_server_create("init");
+	if (fd == -1)
+		return (void *)-1;
+
+	for (;;) {
+		check_for_task(fd);
+		usleep(1000);
+	}
+
+	return 0;
+}
+
 int monitor_run(void)
 {
+	pthread_t t;
+
+	pthread_create(&t, NULL, ux_server_run, 0);
+
 	signal(SIGKILL, monitor_handler);
 	signal(SIGTSTP, monitor_handler);
 	signal(SIGQUIT, monitor_handler);
 
 	for (;;) {
 		waitpid(-1, NULL, WNOHANG);
-		usleep(50);
+		usleep(100);
 	}
 
 	return 0;

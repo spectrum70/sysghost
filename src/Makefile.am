@@ -10,9 +10,11 @@ sysghost_SOURCES = main.c \
 		mount.c \
 		exec.c \
 		process.c \
+		halt.c \
 		logind.c \
 		umount.c \
 		monitor.c
+
 sysghost_LDFLAGS = $(all_libraries)
 sysghost_LDADD = ../lib/libcommon.a
 
