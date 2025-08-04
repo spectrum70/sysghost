@@ -8,5 +8,6 @@ libcommon_a_CPPFLAGS = -I../include
 libcommon_a_SOURCES = \
 	 	../lib/log.c \
 		../lib/fs.c \
+		../lib/halt.c \
 		../lib/socket.c \
                 ../lib/hdutils.c

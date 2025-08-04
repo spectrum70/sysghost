@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <getopt.h>
 
+#include <sys/mount.h>
 #include <sys/reboot.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -128,9 +129,13 @@ void system_down(int reboot_system)
 		exit(1);
 	}
 
+	fprintf(stderr, "%s: sending TERM signal to all ...\r\n", __progname);
+
 	/* Kill all processes. */
 	kill(-1, SIGTERM);
 	sleep(WAIT_BETWEEN_SIGNALS);
+
+	fprintf(stderr, "%s: sending KILL signal to all ...\r\n", __progname);
 	(void) kill(-1, SIGKILL);
 
 	/* Kill init now */
@@ -140,22 +145,23 @@ void system_down(int reboot_system)
 	 * To clarify it this is really blocking the shutdown
 	 * and what
 	 */
-	//spawn(1, "quotaoff", "-a", NULL);
-
+	spawn(1, "quotaoff", "-a", NULL);
 	sync();
-
 	spawn(0, "swapoff", "-a", NULL);
 	spawn(0, "umount", "-a", NULL);
 
-	hdflush();
+	/* Is this needed for a clear shutdown ? */
+	//hdflush();
+
 	sync();
 
 	if (reboot_system) {
+		fprintf(stderr, "%s: rebooting now ...\r\n", __progname);
 		reboot(RB_AUTOBOOT);
 	} else {
+		fprintf(stderr, "sysghost; system halted.\r\n");
 		reboot(RB_POWER_OFF);
 	}
-
 	/* WE NEVER GET HERE */
 	exit(0);
 }

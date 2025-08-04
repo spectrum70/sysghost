@@ -10,7 +10,6 @@ sysghost_SOURCES = main.c \
 		mount.c \
 		exec.c \
 		process.c \
-		halt.c \
 		logind.c \
 		umount.c \
 		monitor.c
