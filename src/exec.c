@@ -176,26 +176,32 @@ static int __exec(char *cmd_line, int daemon)
 		 */
 		execvp(abs_name, argv);
 
-		dbg("(execvp errno: -%d %s) ", errno, strerror(errno));
+		dbg("(execvp errno: -%d %s)\n", errno, strerror(errno));
 		exit(errno);
 		/* Waitpid will catch the error. */
 	} else {
-		int status, ret;
+		int status, rval;
 
 		/* Avoid zombies, always wait termination */
 
 		if (daemon) {
 			/* Some daemon can stay in fg as seatd. Using WNOHANG. */
-			ret = waitpid(pid, &status, WNOHANG);
+			rval = waitpid(pid, &status, WNOHANG);
 
 			if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
 				process_save_pid(argv[0], (int)pid);
 				log_step_success();
-			} else if (ret == 0) {
+				ret = 0;
+			} else if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+				log_step_err();
+				ret = -1;
+			} else if (rval == 0) {
 				/* Daemon is an app, WNOHANG case. */
 				log_step_success();
+				ret = 0;
 			} else {
 				log_step_err();
+				ret = rval;
 			}
 		} else {
 			/*
@@ -206,7 +212,7 @@ static int __exec(char *cmd_line, int daemon)
 		}
 	}
 
-	return 0;
+	return ret;
 }
 
 int exec(char *cmd_line)
