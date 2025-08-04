@@ -33,6 +33,7 @@
 #include <sys/wait.h>
 
 #include "fs.h"
+#include "halt.h"
 #include "hdutils.h"
 #include "log.h"
 #include "socket.h"
@@ -40,8 +41,6 @@
 #define SD_VERSION	"0.90"
 
 #define SYSDOWN_PID	"/var/run/sysdown.pid"
-
-extern char *__progname;
 
 enum options {
 	opt_reboot = 1,
@@ -121,6 +120,7 @@ int get_options(int argc, char **argv)
 int main(int argc, char **argv)
 {
 	struct sigaction sa;
+	char *sudo;
 	FILE *fp;
 	int pid = 0;
 
@@ -143,6 +143,13 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
+	sudo = getenv("SUDO_UID");
+	if (sudo != NULL) {
+		msg("%s: cannot shutdown by sudo, please su root.\n",
+		    __progname);
+		exit(-1);
+	}
+
 	/* Read pid of running sysdown from file. */
 	if ((fp = fopen(SYSDOWN_PID, "r")) != NULL) {
 		if (fscanf(fp, "%d", &pid) != 1)
@@ -156,22 +163,23 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	/* Go to the root directory */
 	if (chdir("/")) {
-		msg("%s: chdir(/): %m\n", __progname);
+		msg("%s: cannot chdir /, exiting.\n", __progname);
 		exit(1);
 	}
 
-	msg("asking for forcefsck\n");
-
+	/* Ask fsck at reboot */
 	fs_touch("/forcefsck");
 
-	msg("unlink and create new PID\n");
+	msg("%s: shutting down system ...\n", __progname);
+
+	/* Following lines seems to make fs clean, to study. */
+	msg("%s: unlink and create new PID\n", __progname);
 	/* Create a new PID file. */
 	unlink(SYSDOWN_PID);
 	umask(022);
 
-	msg("catching signals ...\n");
+	msg("%s: catching signals ...\n", __progname);
 
 	/* Catch some signals. */
 	signal(SIGQUIT, SIG_IGN);
@@ -189,12 +197,11 @@ int main(int argc, char **argv)
 
 	/* start sysdown by pid \1 here */
 	if (opts & opt_reboot) {
-	/* Communicate to init by unix socket */
-		ux_client_write("/tmp/sg/init", "reboot\n");
+		system_down(1);
+	} else {
+		system_down(0);
 	}
 
-	ux_client_write("/tmp/sg/init", "shutdown\n");
-
-	/* Exit asap, allow init to umount. */
-	exit(0);
+	/* NOT REACHED */
+	return 0;
 }
