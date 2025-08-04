@@ -25,6 +25,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <sys/syscall.h>
 #include <sys/wait.h>
 
 #include "log.h"
@@ -45,6 +46,46 @@ static void monitor_handler(int signum)
 		exit(0);
 }
 
+#define TMPFS	"/mnt/tmpfs"
+
+#include <sys/mount.h>
+#include <sys/stat.h>
+#include <sys/syscall.h>
+
+/* Shutdown from init test, gives errors. */
+#if 0
+static int shutdown(int reboot)
+{
+	const char options[] = "size=512M,uid=0,gid=0,mode=700";
+	int ret;
+
+	sleep(2);
+	sync();
+	sync();
+
+	mkdir(TMPFS, 0755);
+
+	ret = mount("tmpfs", TMPFS, "tmpfs", 0, options);
+	if (ret)
+		return ret;
+
+	mkdir(TMPFS "/.old", 0755);
+	mkdir(TMPFS "/proc", 0755);
+	mkdir(TMPFS "/dev", 0755);
+
+	chdir(TMPFS);
+
+	syscall(SYS_pivot_root, ".", ".");
+
+	umount2("./boot", MNT_DETACH);
+	umount2("./dev", MNT_DETACH);
+	umount2(".", MNT_DETACH);
+
+	system_down(reboot);
+
+	return 0;
+}
+
 static void check_for_task(int fd)
 {
 	char buff[1024];
@@ -63,10 +104,11 @@ static void check_for_task(int fd)
 			if (strncmp(buff, "shutdown", 8) == 0) {
 				/* Close the server, waitng sysdown to exit */
 				close(fd);
-				sleep(1);
-				sync();
 				/* Shutdown the system now */
-				system_down(0);
+				shutdown(0);
+			} else if (strncmp(buff, "reboot", 6) == 0) {
+				close(fd);
+				shutdown(1);
 			}
 			status = ST_WAITING;
 		}
@@ -84,25 +126,27 @@ void *ux_server_run()
 
 	for (;;) {
 		check_for_task(fd);
-		usleep(1000);
+		usleep(10000);
 	}
 
 	return 0;
 }
+#endif
 
 int monitor_run(void)
 {
+#if 0
 	pthread_t t;
 
 	pthread_create(&t, NULL, ux_server_run, 0);
-
+#endif
 	signal(SIGKILL, monitor_handler);
 	signal(SIGTSTP, monitor_handler);
 	signal(SIGQUIT, monitor_handler);
 
 	for (;;) {
 		waitpid(-1, NULL, WNOHANG);
-		usleep(100);
+		usleep(1000);
 	}
 
 	return 0;
