@@ -15,4 +15,6 @@ void log_ghost_version(char *version);
 
 void dbg(char *fmt, ...);
 
+extern char *__progname;
+
 #endif /* log_h */
