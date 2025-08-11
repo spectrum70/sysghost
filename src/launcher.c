@@ -23,18 +23,19 @@
 #define _GNU_SOURCE
 #endif
 
-//#include <stdio.h>
-
 #include <fcntl.h>
 #include <sched.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+#include <linux/limits.h>
 
 #include "log.h"
 #include "mount.h"
 #include "exec.h"
 #include "process.h"
 #include "fs.h"
+#include "utils.h"
 
 #define MAX_ENTRY	512
 
@@ -67,7 +68,7 @@ void launcher_step_virtual_consoles()
 	};
 
 	for (i = 0; *vc[i]; i++) {
-		exec_daemon(vc[i]);
+		exec_nowait(vc[i]);
 	}
 }
 
@@ -83,12 +84,15 @@ void lanucher_step_run_services()
 		{"/usr/bin/avahi-daemon -D"},
 		{0},
 	};
+	char name[PATH_MAX];
 
 	/* seatd behaves as an application, but is not terminating. */
 	exec_nowait("/bin/seatd -l silent -g seat >/dev/null");
 
 	for (i = 0; *list[i]; i++) {
-		exec_daemon(list[i]);
+		utils_get_appname(list[i], name);
+		if (fs_file_dir_exists(name))
+			 exec_daemon(list[i]);
 	}
 }
 
@@ -176,7 +180,7 @@ void launcher_init()
 	 * some support from them.
 	 */
 	if (fs_file_dir_exists("/etc/sysghost"))
-		exec_wait_exit("/etc/sysghost/udevd.sh");
+		exec_script("/etc/sysghost/udevd.sh");
 
 #endif /* USE_UDEVD */
 
@@ -187,7 +191,7 @@ void launcher_init()
 	launcher_run_dbus();
 
 	if (fs_file_dir_exists("/etc/sysghost"))
-		exec_wait_exit("/etc/sysghost/commands.sh");
+		exec_script("/etc/sysghost/commands.sh");
 
 	lanucher_step_run_services();
 

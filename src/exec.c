@@ -39,6 +39,7 @@ enum {
 	ex_wait_exit,
 	ex_nowait,
 	ex_daemon,
+	ex_script,
 };
 
 static char *exec_trim_spaces(char *str)
@@ -172,7 +173,7 @@ static int __exec(char *cmd_line, int exec_type)
 
 	if (exec_type != ex_daemon) {
 		log_step("executing: %s ... ", argv[0]);
-		if (exec_type == ex_wait_exit)
+		if (exec_type == ex_script)
 			msg("\n");
 	} else
 		log_step("daemon: starting %s ... ", argv[0]);
@@ -190,7 +191,7 @@ static int __exec(char *cmd_line, int exec_type)
 	} else {
 		int status, rval;
 
-		if (exec_type == ex_daemon || exec_type == ex_wait_exit) {
+		if (exec_type != ex_nowait) {
 			rval = waitpid(pid, &status, 0);
 		} else {
 			rval = waitpid(pid, &status, WNOHANG);
@@ -202,17 +203,21 @@ static int __exec(char *cmd_line, int exec_type)
 
 		if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
 			process_save_pid(argv[0], (int)pid);
-			log_step_success();
+			if (exec_type != ex_script)
+				log_step_success();
 			ret = 0;
 		} else if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
-			log_step_err();
+			if (exec_type != ex_script)
+				log_step_err();
 			ret = -WEXITSTATUS(status);
 		} else if (rval == 0) {
 			/* Daemon is an app, WNOHANG case. */
-			log_step_success();
+			if (exec_type != ex_script)
+				log_step_success();
 			ret = 0;
 		} else {
-			log_step_err();
+			if (exec_type != ex_script)
+				log_step_err();
 			ret = rval;
 		}
 	}
@@ -234,4 +239,9 @@ int exec_nowait(char *cmd_line)
 int exec_daemon(char *cmd_line)
 {
 	return __exec(cmd_line, ex_daemon);
+}
+
+int exec_script(char *name)
+{
+	return __exec(name, ex_script);
 }
