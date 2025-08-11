@@ -19,23 +19,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <pthread.h>
 #include <signal.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
-#include <sys/syscall.h>
 #include <sys/wait.h>
 
 #include "log.h"
 #include "halt.h"
-#include "socket.h"
 
+#if 0
 enum {
 	ST_WAITING,
 	ST_CONNECTED,
 };
+#endif
 
 static void monitor_handler(int signum)
 {
@@ -46,6 +44,7 @@ static void monitor_handler(int signum)
 		exit(0);
 }
 
+#if 0
 #define TMPFS	"/mnt/tmpfs"
 
 #include <sys/mount.h>
@@ -53,7 +52,6 @@ static void monitor_handler(int signum)
 #include <sys/syscall.h>
 
 /* Shutdown from init test, gives errors. */
-#if 0
 static int shutdown(int reboot)
 {
 	const char options[] = "size=512M,uid=0,gid=0,mode=700";

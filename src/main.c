@@ -21,15 +21,8 @@
 
 #include "launcher.h"
 #include "log.h"
-#include "version.h"
 #include "monitor.h"
-
-#include <linux/reboot.h>  /* Definition of LINUX_REBOOT_* constants */
-#include <stdio.h>
-#include <string.h>
-#include <sys/syscall.h>   /* Definition of SYS_* constants */
-#include <sys/reboot.h>    /* Definition of RB_* constants */
-#include <unistd.h>
+#include "version.h"
 
 int main(int argc, char **argv)
 {
