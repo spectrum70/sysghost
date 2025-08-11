@@ -35,6 +35,12 @@
 #define MAX_ARG_LEN	32
 #define MAX_PATH	512
 
+enum {
+	ex_wait_exit,
+	ex_nowait,
+	ex_daemon,
+};
+
 static char *exec_trim_spaces(char *str)
 {
 	while (*str && *str == ' ')
@@ -130,7 +136,7 @@ static int exec_build_argv(char **argv)
 	return 0;
 }
 
-static int __exec(char *cmd_line, int daemon)
+static int __exec(char *cmd_line, int exec_type)
 {
 	char abs_name[MAX_PATH] = {0};
 	char *argv[MAX_ARGS] = {0};
@@ -164,9 +170,11 @@ static int __exec(char *cmd_line, int daemon)
 		argv[5] ?: "null",
 		argv[6] ?: "null");
 
-	if (!daemon)
-		log_step("executing: %s ...\n", argv[0]);
-	else
+	if (exec_type != ex_daemon) {
+		log_step("executing: %s ... ", argv[0]);
+		if (exec_type == ex_wait_exit)
+			msg("\n");
+	} else
 		log_step("daemon: starting %s ... ", argv[0]);
 
 	if ((pid = fork()) == 0) {
@@ -182,46 +190,48 @@ static int __exec(char *cmd_line, int daemon)
 	} else {
 		int status, rval;
 
-		/* Avoid zombies, always wait termination */
-
-		if (daemon) {
-			/* Some daemon can stay in fg as seatd. Using WNOHANG. */
-			rval = waitpid(pid, &status, WNOHANG);
-
-			if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-				process_save_pid(argv[0], (int)pid);
-				log_step_success();
-				ret = 0;
-			} else if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
-				log_step_err();
-				ret = -1;
-			} else if (rval == 0) {
-				/* Daemon is an app, WNOHANG case. */
-				log_step_success();
-				ret = 0;
-			} else {
-				log_step_err();
-				ret = rval;
-			}
+		if (exec_type == ex_daemon || exec_type == ex_wait_exit) {
+			rval = waitpid(pid, &status, 0);
 		} else {
-			/*
-			 * Exec must return, or scripts as command.sh
-			 * completes after tty start.
-			 */
-			waitpid(pid, &status, 0);
+			rval = waitpid(pid, &status, WNOHANG);
+		}
+
+		dbg("rval %d\n", rval);
+		dbg("WIFEXITED(status) %d\n", WIFEXITED(status));
+		dbg("WEXITSTATUS(status) %d\n", WEXITSTATUS(status));
+
+		if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+			process_save_pid(argv[0], (int)pid);
+			log_step_success();
+			ret = 0;
+		} else if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+			log_step_err();
+			ret = -WEXITSTATUS(status);
+		} else if (rval == 0) {
+			/* Daemon is an app, WNOHANG case. */
+			log_step_success();
+			ret = 0;
+		} else {
+			log_step_err();
+			ret = rval;
 		}
 	}
 
 	return ret;
 }
 
-int exec(char *cmd_line)
+int exec_wait_exit(char *cmd_line)
 {
-	return __exec(cmd_line, 0);
+	return __exec(cmd_line, ex_wait_exit);
+}
+
+int exec_nowait(char *cmd_line)
+{
+	return __exec(cmd_line, ex_nowait);
 }
 
 /* For daemons, we cannot wait termination. */
 int exec_daemon(char *cmd_line)
 {
-	return __exec(cmd_line, 1);
+	return __exec(cmd_line, ex_daemon);
 }

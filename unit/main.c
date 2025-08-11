@@ -54,17 +54,22 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	log_step("test: exec_daemon (should fail)\n");
-	ret = exec_daemon("/usr/sbin/pippo");
-	if (ret != 0)
-		log_step("test: exec_daemon ok\n");
+	log_step("test: exec_wait_exit missing exe, -2, must fail with error\n");
+	ret = exec_wait_exit("/usr/sbin/pippo");
+	if (ret == -2)
+		log_step("test: exec_wait_exit ok\n");
 	else
 		exit_err();
 
-	system("killall avahi-daemon");
-	sleep(1);
+	log_step("test: exec_nowait (multi args seatd blocking app)\n");
+	ret = exec_nowait("/bin/seatd -l silent -g seat >/dev/null &");
+	if (ret == 0)
+		log_step("test: exec_nowait ok\n");
+	else
+		exit_err();
+
 	log_step("test: exec_daemon (should succeed)\n");
-	ret = exec_daemon("/usr/sbin/avahi-daemon -D -s");
+	ret = exec_daemon("/sbin/test &");
 	if (ret == 0)
 		log_step("test: exec_daemon ok\n");
 	else

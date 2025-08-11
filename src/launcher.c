@@ -23,7 +23,7 @@
 #define _GNU_SOURCE
 #endif
 
-#include <stdio.h>
+//#include <stdio.h>
 
 #include <fcntl.h>
 #include <sched.h>
@@ -78,12 +78,14 @@ void lanucher_step_run_services()
 {
 	int i;
 	char list[][MAX_ENTRY] = {
-		{"/bin/seatd -l silent -g seat >/dev/null"},
 		{"/usr/sbin/sshd"},
 		{"/usr/bin/cupsd"},
 		{"/usr/bin/avahi-daemon -D"},
 		{0},
 	};
+
+	/* seatd behaves as an application, but is not terminating. */
+	exec_nowait("/bin/seatd -l silent -g seat >/dev/null");
 
 	for (i = 0; *list[i]; i++) {
 		exec_daemon(list[i]);
@@ -174,7 +176,7 @@ void launcher_init()
 	 * some support from them.
 	 */
 	if (fs_file_dir_exists("/etc/sysghost"))
-		exec("/etc/sysghost/udevd.sh");
+		exec_wait_exit("/etc/sysghost/udevd.sh");
 
 #endif /* USE_UDEVD */
 
@@ -185,7 +187,7 @@ void launcher_init()
 	launcher_run_dbus();
 
 	if (fs_file_dir_exists("/etc/sysghost"))
-		exec("/etc/sysghost/commands.sh");
+		exec_wait_exit("/etc/sysghost/commands.sh");
 
 	lanucher_step_run_services();
 
