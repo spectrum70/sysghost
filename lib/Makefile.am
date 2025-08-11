@@ -7,6 +7,7 @@ noinst_LIBRARIES = libcommon.a
 libcommon_a_CPPFLAGS = -I../include
 libcommon_a_SOURCES = \
 	 	../lib/log.c \
+		../lib/utils.c \
 		../lib/fs.c \
 		../lib/halt.c \
 		../lib/socket.c \
