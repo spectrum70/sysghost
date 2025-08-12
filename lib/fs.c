@@ -78,15 +78,19 @@ int fs_create_file_write_str(char *path, char *str)
 int fs_file_read_int(const char *path, int *num)
 {
 	FILE *f;
+	int rval = 0;
 
 	f = fopen(path, "r");
 	if (!f)
 		return -1;
 
-	fscanf(f, "%d", num);
+	rval = fscanf(f, "%d", num);
+	if (rval < 0)
+		rval = -1;
+
 	fclose(f);
 
-	return 0;
+	return rval;
 }
 
 int fs_file_read_str(const char *path, char *str)
@@ -111,7 +115,7 @@ int fs_file_read_str(const char *path, char *str)
 
 int fs_touch(const char *filename)
 {
-	int fd = open(filename, O_CREAT | S_IRUSR | S_IWUSR);
+	int fd = open(filename, O_CREAT, S_IRUSR | S_IWUSR);
 
 	if (fd == -1)
        		 return fd;
