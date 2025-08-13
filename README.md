@@ -6,12 +6,9 @@
 	  <a href="https://github.com/spectrum70/sysghost?"><img alt="" src="https://img.shields.io/github/followers/spectrum70.svg?style=social&label=Follow&maxAge=2592000"></a></br></br>
       <a href="https://awesome.re"><img alt="" src="https://awesome.re/badge.svg"></a>
 </p>
-
 <p align="center">
   <img src="res/sysghost.png" width="100%" title="hover text">
 </p>
-
-
 <p align="center"><b> A simple init system</b></p>
 
 A **fast** and **basic** init system, written in C with a very simple design, features kept at minimum to leave to the user more freedom customizing the boot strategy
