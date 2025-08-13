@@ -3,7 +3,8 @@
 	  <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html"><img alt="" src="https://img.shields.io/badge/License-GPL_v2-blue.svg"></a>
 	  <a href="https://GitHub.com/spectrum70/sysghost/graphs/commit-activity"><img alt="" src="https://img.shields.io/badge/Maintained%3F-yes-green.svg"></a><br>
 	  <a href="https://GitHub.com/spectrum70/sysghost/starrers"><img alt="" src="https://img.shields.io/github/stars/spectrum70/sysghost" /></a>
-	  <a href="https://github.com/spectrum70/sysghost?"><img alt="" src="https://img.shields.io/github/followers/spectrum70.svg?style=social&label=Follow&maxAge=2592000"></a>
+	  <a href="https://github.com/spectrum70/sysghost?"><img alt="" src="https://img.shields.io/github/followers/spectrum70.svg?style=social&label=Follow&maxAge=2592000"></a></br></br>
+      <a href="https://awesome.re"><img alt="" src="https://awesome.re/badge.svg"></a>
 </p>
 
 <p align="center">
