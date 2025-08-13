@@ -1,5 +1,9 @@
 <p align="center">
-  [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
+	  <a href="https://img.shields.io/github/stars/spectrum70/sysghost"><img alt="" src="https://img.shields.io/github/stars/spectrum70/sysghost" /></a>
+</p>
+
+
+[![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
   [![Open Source? Yes!](https://badgen.net/badge/Open%20Source%20%3F/Yes%21/blue?icon=github)](https://github.com/spectrum70/badges/)
   [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/spectrum70/sysghost/graphs/commit-activity)
   [![GitHub branches](https://badgen.net/github/branches/spectrum70/sysghost)](https://github.com/spectrum70/sysghost/)
@@ -9,7 +13,7 @@
   ![GitHub Repo stars](https://img.shields.io/github/stars/spectrum70/sysghost)
   [![GitHub forks](https://img.shields.io/github/forks/spectrum70/sysghost.svg?style=social&label=Fork&maxAge=2592000)](https://GitHub.com/spectrum70/sysghost/network/)
   [![GitHub followers](https://img.shields.io/github/followers/spectrum70.svg?style=social&label=Follow&maxAge=2592000)](https://github.com/spectrum70/sysghost?tab=followers)
-</p>
+
 
 <p align="center">
   <img src="res/sysghost.png" width="100%" title="hover text">
