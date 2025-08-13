@@ -173,7 +173,7 @@ static int __exec(char *cmd_line, int exec_type)
 		argv[5] ?: "null",
 		argv[6] ?: "null");
 
-	if (fs_file_dir_exists(abs_name))
+	if (!fs_file_dir_exists(abs_name))
 		return -1;
 
 	if (exec_type != ex_daemon) {
