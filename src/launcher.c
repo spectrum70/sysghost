@@ -84,15 +84,12 @@ void lanucher_step_run_services()
 		{"/usr/bin/avahi-daemon -D"},
 		{0},
 	};
-	char name[PATH_MAX];
 
 	/* seatd behaves as an application, but is not terminating. */
 	exec_nowait("/bin/seatd -l silent -g seat >/dev/null");
 
 	for (i = 0; *list[i]; i++) {
-		utils_get_appname(list[i], name);
-		if (fs_file_dir_exists(name))
-			 exec_daemon(list[i]);
+		exec_daemon(list[i]);
 	}
 }
 

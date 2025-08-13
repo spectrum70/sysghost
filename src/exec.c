@@ -20,14 +20,16 @@
  */
 
 #include <errno.h>
-#include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/wait.h>
 #include <unistd.h>
 
+#include <linux/limits.h>
+
+#include <sys/wait.h>
+
 #include "exec.h"
+#include "fs.h"
 #include "log.h"
 #include "process.h"
 
@@ -139,7 +141,7 @@ static int exec_build_argv(char **argv)
 
 static int __exec(char *cmd_line, int exec_type)
 {
-	char abs_name[MAX_PATH] = {0};
+	char abs_name[PATH_MAX] = {0};
 	char *argv[MAX_ARGS] = {0};
 	pid_t pid;
 	int ret;
@@ -170,6 +172,9 @@ static int __exec(char *cmd_line, int exec_type)
 		argv[4] ?: "null",
 		argv[5] ?: "null",
 		argv[6] ?: "null");
+
+	if (fs_file_dir_exists(abs_name))
+		return -1;
 
 	if (exec_type != ex_daemon) {
 		log_step("executing: %s ... ", argv[0]);
