@@ -5,7 +5,7 @@
 [![GitHub commits](https://badgen.net/github/commits/spectrum70/sysghost)](https://GitHub.com/spectrum70/sysghost/commit/)
 [![GitHub issues](https://img.shields.io/github/issues/spectrum70/sysghost.svg)](https://GitHub.com/spectrum70/sysghost/issues/)
 ![Terminal](https://badgen.net/badge/icon/terminal?icon=terminal&label)<br>
-![GitHub stars](https://img.shields.io/github/stars/spectrum70/sysghost.svg?style=social&label=Star&maxAge=2592000)
+![GitHub Repo stars](https://img.shields.io/github/stars/spectrum70/sysghost)
 [![GitHub forks](https://img.shields.io/github/forks/spectrum70/sysghost.svg?style=social&label=Fork&maxAge=2592000)](https://GitHub.com/spectrum70/sysghost/network/)
 [![GitHub followers](https://img.shields.io/github/followers/spectrum70.svg?style=social&label=Follow&maxAge=2592000)](https://github.com/spectrum70/sysghost?tab=followers)
 
