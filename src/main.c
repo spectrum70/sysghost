@@ -22,7 +22,6 @@
 #include "launcher.h"
 #include "log.h"
 #include "monitor.h"
-#include "version.h"
 
 int main(int argc, char **argv)
 {
