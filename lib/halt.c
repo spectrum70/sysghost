@@ -141,10 +141,15 @@ void system_down(int reboot_system)
 	/* Kill init now */
 	//kill(1, SIGKILL);
 
+	fprintf(stderr, reboot_system ?
+	        ("%s: rebooting now ...\r\n") :
+		("%s: sysghost; system halted.\r\n"),  __progname);
+
 	/*
 	 * To clarify it this is really blocking the shutdown
 	 * and what
 	 */
+	sync();
 	spawn(1, "quotaoff", "-a", NULL);
 	sync();
 	spawn(0, "swapoff", "-a", NULL);
@@ -152,17 +157,14 @@ void system_down(int reboot_system)
 
 	/* Is this needed for a clear shutdown ? */
 	//hdflush();
-
 	sync();
-
+	sync();
+	sleep(0.5);
 	if (reboot_system) {
-		fprintf(stderr, "%s: rebooting now ...\r\n", __progname);
 		reboot(RB_AUTOBOOT);
 	} else {
-		fprintf(stderr, "sysghost; system halted.\r\n");
 		reboot(RB_POWER_OFF);
 	}
 	/* WE NEVER GET HERE */
 	exit(0);
 }
-
