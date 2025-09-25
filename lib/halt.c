@@ -59,7 +59,7 @@ int spawn(int silent, char *prog, ...)
 
 	while ((pid = fork()) < 0 && i < 10) {
 		perror("fork");
-		sleep(3);
+		sleep(5);
 		i++;
 	}
 
@@ -153,13 +153,11 @@ void system_down(int reboot_system)
 	spawn(1, "quotaoff", "-a", NULL);
 	sync();
 	spawn(0, "swapoff", "-a", NULL);
+	sync();
 	spawn(0, "umount", "-a", NULL);
 
 	/* Is this needed for a clear shutdown ? */
 	//hdflush();
-	sync();
-	sync();
-	sleep(0.5);
 	if (reboot_system) {
 		reboot(RB_AUTOBOOT);
 	} else {

@@ -170,6 +170,7 @@ int main(int argc, char **argv)
 
 	/* Ask fsck at reboot */
 	fs_touch("/forcefsck");
+	sync();
 
 	msg("%s: shutting down system ...\n", __progname);
 
