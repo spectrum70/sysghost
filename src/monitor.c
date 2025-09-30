@@ -21,12 +21,17 @@
 
 #include <signal.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include <unistd.h>
 
+#include <sys/reboot.h>
+
 #include <sys/wait.h>
+#include <sys/syscall.h>
 
 #include "log.h"
 #include "halt.h"
+#include "fs.h"
 
 #if 0
 enum {
@@ -35,15 +40,53 @@ enum {
 };
 #endif
 
-static void monitor_handler(int signum)
-{
-	if (signum == SIGTSTP)
-		pause();
+#include <stdio.h>
 
-	if (signum == SIGKILL || signum == SIGQUIT)
-		exit(0);
+static void monitor_shutdown(int type)
+{
+	int i, ret;
+
+	/* Wait sysdon to exit */
+	sleep(1);
+
+	spawn(0, "umount", "-R", "/dev", NULL);
+
+	for (i = 0; i < 3; i++) {
+		/* Re-kill all if someprocess was not */
+		kill(-1, SIGKILL);
+		ret = spawn(0, "umount", "-a", NULL);
+		if (ret == 0)
+			break;
+		sync();
+		sleep(1);
+	}
+
+	sync();
+	reboot(type);
 }
 
+static void monitor_handler(int signum)
+{
+	if (signum == SIGKILL) {
+		/*
+		 * Sysdown is not able to deliver this signal, seems due
+		 * to lower privileges.
+		 */
+	}
+
+	if (signum == SIGUSR1) {
+		monitor_shutdown(RB_POWER_OFF);
+	}
+
+	if (signum == SIGUSR2) {
+		monitor_shutdown(RB_AUTOBOOT);
+	}
+
+	if (signum == SIGTSTP)
+		pause();
+}
+
+/* Unix socket communication */
 #if 0
 #define TMPFS	"/mnt/tmpfs"
 
@@ -141,10 +184,13 @@ int monitor_run(void)
 	signal(SIGKILL, monitor_handler);
 	signal(SIGTSTP, monitor_handler);
 	signal(SIGQUIT, monitor_handler);
+	signal(SIGUSR1, monitor_handler);
+	signal(SIGUSR2, monitor_handler);
 
 	for (;;) {
 		waitpid(-1, NULL, WNOHANG);
-		usleep(1000);
+		/* 50 msecs to remove zombies seems ok */
+		usleep(50000);
 	}
 
 	return 0;

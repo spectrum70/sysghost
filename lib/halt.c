@@ -123,46 +123,28 @@ void system_down(int reboot_system)
 	/* TODO: mistery from sysvinit, to understand. */
 	close(255);
 
-	/* First idle init. */
-	if (kill(1, SIGTSTP) < 0) {
-		msg("can't idle init: %s\r\n", strerror(errno));
-		exit(1);
-	}
-
-	fprintf(stderr, "%s: sending TERM signal to all ...\r\n", __progname);
-
 	/* Kill all processes. */
+	fprintf(stderr, "%s: sending TERM signal to all ...\r\n", __progname);
 	kill(-1, SIGTERM);
 	sleep(WAIT_BETWEEN_SIGNALS);
 
 	fprintf(stderr, "%s: sending KILL signal to all ...\r\n", __progname);
 	(void) kill(-1, SIGKILL);
 
-	/* Kill init now */
-	//kill(1, SIGKILL);
+	/* From now on, fprintf will not work. */
 
-	fprintf(stderr, reboot_system ?
-	        ("%s: rebooting now ...\r\n") :
-		("%s: sysghost; system halted.\r\n"),  __progname);
-
-	/*
-	 * To clarify it this is really blocking the shutdown
-	 * and what
-	 */
 	sync();
 	spawn(1, "quotaoff", "-a", NULL);
 	sync();
 	spawn(0, "swapoff", "-a", NULL);
 	sync();
-	spawn(0, "umount", "-a", NULL);
 
-	/* Is this needed for a clear shutdown ? */
-	//hdflush();
-	if (reboot_system) {
-		reboot(RB_AUTOBOOT);
-	} else {
-		reboot(RB_POWER_OFF);
+	/* Ask to init to unmount all and shutdown. */
+	if (kill(1, reboot_system ? SIGUSR2 : SIGUSR1) == 0) {
+		sleep(0.5);
+		exit(0);
 	}
-	/* WE NEVER GET HERE */
+
+	/* WE SHOULD NEVER GET HERE */
 	exit(0);
 }
