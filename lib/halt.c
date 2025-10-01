@@ -100,28 +100,55 @@ int spawn(int silent, char *prog, ...)
 	return 0;
 }
 
-void system_down(int reboot_system)
+void close_all_streams(bool redirect_tty)
 {
 	int i;
 
 	/* First close all stdin, stdout and stderr. */
-	for(i = 2; i < 3; i++) {
-		if (!isatty(i)) {
+	for(i = 0; i < 3; i++) {
+		if (!redirect_tty)
+			close(i);
+		else if (!isatty(i)) {
 			/*
 			 * Opening /dev/null with same number would cause
 			 * messages to go there from now on.
 			 */
 			close(i);
+			/* Redirecting tty */
 			open("/dev/null", O_RDWR);
 		}
 	}
 
-	/* Special kernel handled files as kmsg and simila other. */
+	/* Special kernel handled files as kmsg and similar other. */
 	for(i = 3; i < 20; i++)
 		close(i);
 
 	/* TODO: mistery from sysvinit, to understand. */
 	close(255);
+}
+
+void finalize_reboot(int type)
+{
+	int i, ret;
+
+	spawn(0, "umount", "-R", "/dev", NULL);
+
+	for (i = 0; i < 3; i++) {
+		/* Re-kill everybody if some process was not. */
+		kill(-1, SIGKILL);
+		ret = spawn(0, "umount", "-a", NULL);
+		if (ret == 0)
+			break;
+		sync();
+		sleep(1);
+	}
+
+	reboot(type);
+}
+
+void system_down(int reboot_system)
+{
+	close_all_streams(true);
 
 	/* Kill all processes. */
 	fprintf(stderr, "%s: sending TERM signal to all ...\r\n", __progname);
@@ -139,12 +166,11 @@ void system_down(int reboot_system)
 	spawn(0, "swapoff", "-a", NULL);
 	sync();
 
-	/* Ask to init to unmount all and shutdown. */
-	if (kill(1, reboot_system ? SIGUSR2 : SIGUSR1) == 0) {
-		sleep(0.5);
-		exit(0);
-	}
+	/* Ask to init (pid 1) to unmount all and complete shutdown. */
+	kill(1, reboot_system ? SIGUSR2 : SIGUSR1);
 
-	/* WE SHOULD NEVER GET HERE */
+	/* Waiting for kill from pid 1, likey, or we exit. */
+	sleep(0.5);
+
 	exit(0);
 }

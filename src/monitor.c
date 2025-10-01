@@ -23,110 +23,30 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
-
+#ifdef SG_UNIX_SOCKET
+#include <sys/mount.h>
+#include <sys/stat.h>
+#endif
 #include <sys/reboot.h>
-
-#include <sys/wait.h>
 #include <sys/syscall.h>
+#include <sys/wait.h>
 
 #include "log.h"
 #include "halt.h"
 #include "fs.h"
 
-#if 0
+#ifdef SG_UNIX_SOCKET
+#define TMPFS  "/mnt/tmpfs"
+
 enum {
 	ST_WAITING,
 	ST_CONNECTED,
 };
 #endif
 
-#include <stdio.h>
-
-static void monitor_shutdown(int type)
-{
-	int i, ret;
-
-	/* Wait sysdon to exit */
-	sleep(1);
-
-	spawn(0, "umount", "-R", "/dev", NULL);
-
-	for (i = 0; i < 3; i++) {
-		/* Re-kill all if someprocess was not */
-		kill(-1, SIGKILL);
-		ret = spawn(0, "umount", "-a", NULL);
-		if (ret == 0)
-			break;
-		sync();
-		sleep(1);
-	}
-
-	sync();
-	reboot(type);
-}
-
-static void monitor_handler(int signum)
-{
-	if (signum == SIGKILL) {
-		/*
-		 * Sysdown is not able to deliver this signal, seems due
-		 * to lower privileges.
-		 */
-	}
-
-	if (signum == SIGUSR1) {
-		monitor_shutdown(RB_POWER_OFF);
-	}
-
-	if (signum == SIGUSR2) {
-		monitor_shutdown(RB_AUTOBOOT);
-	}
-
-	if (signum == SIGTSTP)
-		pause();
-}
 
 /* Unix socket communication */
-#if 0
-#define TMPFS	"/mnt/tmpfs"
-
-#include <sys/mount.h>
-#include <sys/stat.h>
-#include <sys/syscall.h>
-
-/* Shutdown from init test, gives errors. */
-static int shutdown(int reboot)
-{
-	const char options[] = "size=512M,uid=0,gid=0,mode=700";
-	int ret;
-
-	sleep(2);
-	sync();
-	sync();
-
-	mkdir(TMPFS, 0755);
-
-	ret = mount("tmpfs", TMPFS, "tmpfs", 0, options);
-	if (ret)
-		return ret;
-
-	mkdir(TMPFS "/.old", 0755);
-	mkdir(TMPFS "/proc", 0755);
-	mkdir(TMPFS "/dev", 0755);
-
-	chdir(TMPFS);
-
-	syscall(SYS_pivot_root, ".", ".");
-
-	umount2("./boot", MNT_DETACH);
-	umount2("./dev", MNT_DETACH);
-	umount2(".", MNT_DETACH);
-
-	system_down(reboot);
-
-	return 0;
-}
-
+#ifdef SG_UNIX_SOCKET
 static void check_for_task(int fd)
 {
 	char buff[1024];
@@ -174,9 +94,43 @@ void *ux_server_run()
 }
 #endif
 
+static void monitor_shutdown(int type)
+{
+	/* Re-close all from here, as a safety check. */
+	close_all_streams(false);
+
+	/* Wait sysdon to exit */
+	sync();
+	sleep(1);
+
+	/* Final steps, as umount and kill/close. */
+	finalize_reboot(type);
+}
+
+static void monitor_handler(int signum)
+{
+	if (signum == SIGKILL) {
+		/*
+		 * Sysdown is not able to deliver this signal, seems due
+		 * to lower privileges.
+		 */
+	}
+
+	if (signum == SIGUSR1) {
+		monitor_shutdown(RB_POWER_OFF);
+	}
+
+	if (signum == SIGUSR2) {
+		monitor_shutdown(RB_AUTOBOOT);
+	}
+
+	if (signum == SIGTSTP)
+		pause();
+}
+
 int monitor_run(void)
 {
-#if 0
+#ifdef SG_UNIX_SOCKET
 	pthread_t t;
 
 	pthread_create(&t, NULL, ux_server_run, 0);
