@@ -112,11 +112,6 @@ int get_options(int argc, char **argv)
 	return 0;
 }
 
-/*
- * sysdown should uses kill -1, so also sudo get killed and sudo sysdown would
- * not work. So, keeping sysghost as suid, as pid 1, by a signakl it can
- * perform the shudtown properly.
- */
 int main(int argc, char **argv)
 {
 	struct sigaction sa;
@@ -143,12 +138,11 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
+	/*
+	 * Check if we are by sudo. If yes, we avoid kill -1 now,
+	 * will be done later on from pid 1. */
+	 */
 	sudo = getenv("SUDO_UID");
-	if (sudo != NULL) {
-		msg("%s: cannot shutdown by sudo, please su root.\n",
-		    __progname);
-		exit(-1);
-	}
 
 	/* Read pid of running sysdown from file. */
 	if ((fp = fopen(SYSDOWN_PID, "r")) != NULL) {
@@ -198,9 +192,9 @@ int main(int argc, char **argv)
 
 	/* start sysdown by pid \1 here */
 	if (opts & opt_reboot) {
-		system_down(1);
+		system_down(1, sudo);
 	} else {
-		system_down(0);
+		system_down(0, sudo);
 	}
 
 	/* NOT REACHED */

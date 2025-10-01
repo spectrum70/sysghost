@@ -146,17 +146,19 @@ void finalize_reboot(int type)
 	reboot(type);
 }
 
-void system_down(int reboot_system)
+void system_down(int reboot_system, bool sudo)
 {
 	close_all_streams(true);
 
 	/* Kill all processes. */
 	fprintf(stderr, "%s: sending TERM signal to all ...\r\n", __progname);
-	kill(-1, SIGTERM);
-	sleep(WAIT_BETWEEN_SIGNALS);
-
-	fprintf(stderr, "%s: sending KILL signal to all ...\r\n", __progname);
-	(void) kill(-1, SIGKILL);
+	if (!sudo) {
+		kill(-1, SIGTERM);
+		sleep(WAIT_BETWEEN_SIGNALS);
+		fprintf(stderr, "%s: sending KILL signal to all ...\r\n",
+			__progname);
+		(void) kill(-1, SIGKILL);
+	}
 
 	/* From now on, fprintf will not work. */
 
