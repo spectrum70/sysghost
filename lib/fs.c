@@ -19,9 +19,9 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <sys/stat.h>
 
 #include "fs.h"
@@ -123,4 +123,14 @@ int fs_touch(const char *filename)
 	close(fd);
 
 	return 0;
+}
+
+int fs_check_running()
+{
+	struct stat sts;
+
+	if (stat(FS_LOCKFILE, &sts) != 0)
+		return 0;
+
+	return -1;
 }

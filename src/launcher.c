@@ -25,10 +25,12 @@
 
 #include <fcntl.h>
 #include <sched.h>
-#include <sys/wait.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include <linux/limits.h>
+
+#include <sys/wait.h>
 
 #include "log.h"
 #include "mount.h"
@@ -55,6 +57,14 @@ void launcher_step_mount()
 	/* Steps and rrror check inside called functions. */
 	mount_fstab();
 	mount_rest();
+
+	/* Check if we are already running ... */
+	/* TODO: do this at very main.c init, checking for a mounted fs, */
+	if (fs_check_running() != 0)
+		exit(0);
+
+	/* Now mark we are running. */
+	fs_touch(FS_LOCKFILE);
 }
 
 void launcher_step_virtual_consoles()
@@ -200,4 +210,3 @@ void launcher_init()
 			"--noclear", "tty1", "38400", "linux", NULL);
 	}
 }
-
