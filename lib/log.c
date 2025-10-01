@@ -151,9 +151,8 @@ void log_step_success()
 
 void log_ghost_version(char *version)
 {
-	printf(g_fuxia "  .-.    \n"
-	               " (o o)   " g_yellow "v.%s\n" g_fuxia
-  		       " | O \\_  \n"
-  		       "  `----' \n\n" g_reset, version);
+	printf(g_fuxia "  .-.\n"
+	               " (" g_yellow "o o" g_fuxia")   " g_yellow "v.%s\n" g_fuxia
+  		       " |" g_gray " O " g_fuxia "\\___\n"
+  		       "  `------'\n\n" g_reset, version);
 }
-
