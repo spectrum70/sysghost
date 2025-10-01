@@ -26,7 +26,7 @@
 int main(int argc, char **argv)
 {
 	sg_log(0, SYSGHOST_STR " init system starting\n\n");
-	log_ghost_version(VERSION "+" GIT_VERSION);
+	log_ghost_version(VERSION "-g" GIT_VERSION);
 
 	launcher_init();
 
