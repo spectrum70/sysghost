@@ -3,7 +3,7 @@
 # sysghost command sequence, for fast boot
 # (C) 2025 kernel-space.org
 
-source /etc/sysghost/lib_net.sh
+source /etc/sysghost/lib-net.sh
 
 setup_backlight() {
 	chown root:video /sys/class/backlight/nv_backlight/brightness
@@ -19,11 +19,10 @@ setup_network() {
 
 	sysctl -w net.ipv4.ping_group_range="0 1000" > /dev/null
 
-	net_start lo 127.0.0.1/24
-	net_start_wifi wlo1
+	net_start lo 127.0.0.1/24 up
 
-	# setup gateway
-	# route add default gw 192.168.0.1
+	# wifi can take seconds, run it in parallel
+	/etc/sysghost/p-net-wifi.sh wlo1 &
 
 	# setup dns
 	echo "nameserver ${NS}" > /etc/resolv.conf

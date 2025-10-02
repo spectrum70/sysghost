@@ -1,27 +1,31 @@
 #!/bin/sh
 #
-# magic udevd init sequence
+# magic udevd sequence, for fast boot
 # (C) 2025 kernel-space.org
 
 source /etc/sysghost/lib.sh
 
-# Add here any manual module loading (modprobe stuff).
-load_modules()
+# Dynamically plugged devcices are not in devtmpfs
+# but added by uevent kernel->udevd. Since for now we are
+# not usuing udev, loading them here.
+
+load_early_cmds()
 {
-	#modprobe module_a
-	#modprobe module_b
-	udevadm trigger
+	cat /sys/class/backlight/nv_backlight/max_brightness > \
+		/sys/class/backlight/nv_backlight/brightness
 }
+
 
 # Considering using systemd-udevd, that is declared as working
 # standalone uevent menager, this is needed to retrigger kernel
 # uevents issued before udevd has been started.
 retrigger_all_uevents()
 {
-	udevadm trigger --action=add --type=subsystems
-	udevadm trigger --action=add --type=devices
-	udevadm settle
+        udevadm trigger --action=add --type=subsystems
+        udevadm trigger --action=add --type=devices
+        udevadm settle
 }
 
-#load_modules
+load_early_cmds
 retrigger_all_uevents
+
