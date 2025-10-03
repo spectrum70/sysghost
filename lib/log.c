@@ -32,6 +32,7 @@ static int loglevel_max = 12;
 #define g_red		esc "31m"
 #define g_yellow	esc "33m"
 #define g_gray		esc "37m"
+#define g_green		esc "92m"
 #define g_blue		esc "94m"
 #define g_fuxia		esc "95m"
 
@@ -149,10 +150,7 @@ void log_step_success()
 	pthread_mutex_unlock(&mutex);
 }
 
-void log_ghost_version(char *version)
+void log_sysghost_start(char *version)
 {
-	printf(g_fuxia "  .-.\n"
-	               " (" g_yellow "o o" g_fuxia")   " g_yellow "v.%s\n" g_fuxia
-  		       " |" g_gray " O " g_fuxia "\\___\n"
-  		       "  `------'\n\n" g_reset, version);
+	printf(g_green "\n sysghost init v.%s starting\n\n" g_reset, version);
 }
