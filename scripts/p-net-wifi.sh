@@ -1,15 +1,14 @@
 #!/bin/sh
 #
-# parallel-net.sh
+# p-net-wifi.sh
 
-# parallel sript, message only at the end
+# Parallel sript, message only at the end
 
 source /etc/sysghost/lib-net.sh
 
+# Enable rfkill and wait for unblock applied
 /bin/rfkill unblock wlan
 
-# we may have a post-up rule, second call to dhclient will just fail
-# silently
 state_rfkill=""
 
 for i in $(seq 1 10); do
@@ -27,7 +26,8 @@ fi
 
 net_wait ${1}
 
-/usr/bin/wpa_supplicant -qq -Dnl80211 -i${1} -c/etc/wpa_supplicant.conf 2>&1 > /dev/null &
-
+# Start wpa_supplicant
+/usr/bin/wpa_supplicant -qq -Dnl80211 -i${1} -c/etc/wpa_supplicant.conf 2>&1 > /dev/null
+# Get ip address now
 /usr/sbin/dhclient ${1}
 
