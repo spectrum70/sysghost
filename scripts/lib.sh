@@ -2,7 +2,7 @@
 
 success()
 {
-	echo -e "\x1b[93msuccess\x1b[0m"
+	echo -e "\x1b[92mdone\x1b[0m"
 }
 
 error()
@@ -12,7 +12,7 @@ error()
 
 step()
 {
-	echo -e -n "\x1b[93m● \x1b[0m${1}"
+	echo -e -n "\x1b[92m● \x1b[0m${1}"
 }
 
 emsg()

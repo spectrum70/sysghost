@@ -112,7 +112,7 @@ void log_step(char *fmt, ...)
 	pthread_mutex_lock(&mutex);
 
 	va_start(ap, fmt);
-	printf(g_fuxia "● " g_reset);
+	printf(g_green "● " g_reset);
 	vprintf(fmt, ap);
 	fflush(stdout);
 
@@ -146,11 +146,11 @@ void log_step_err()
 void log_step_success()
 {
 	pthread_mutex_lock(&mutex);
-	printf(g_fuxia "success" g_reset "\n");
+	printf(g_green "done" g_reset "\n");
 	pthread_mutex_unlock(&mutex);
 }
 
 void log_sysghost_start(char *version)
 {
-	printf(g_green "\n sysghost init v.%s starting\n\n" g_reset, version);
+	printf(g_green "\n  sysghost init v.%s starting\n\n" g_reset, version);
 }
