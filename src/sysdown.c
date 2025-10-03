@@ -140,7 +140,7 @@ int main(int argc, char **argv)
 
 	/*
 	 * Check if we are by sudo. If yes, we avoid kill -1 now,
-	 * will be done later on from pid 1. */
+	 * will be done later on from pid 1.
 	 */
 	sudo = getenv("SUDO_UID");
 
