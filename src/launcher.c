@@ -144,7 +144,7 @@ void launcher_init()
 	 * is not alternative to this.
 	 */
 	log_step("launching udevd ... ");
-
+	return;
 	/*
 	 * Modern kernels uses devtmpfs that creates devices nodes when the
 	 * kernel boots. Through devtmpfs, at initramfs stage some devices
