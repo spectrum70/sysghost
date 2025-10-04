@@ -5,4 +5,4 @@
 
 int date_get_date_time(char *date_time);
 
-#endif /* log_h */
+#endif /* date_h */
