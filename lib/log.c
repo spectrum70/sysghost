@@ -167,7 +167,9 @@ void log_date_time()
 
 void log_system_info()
 {
-	printf(g_green "System total mempory %lu\n ", memory_get_total_size());
+	printf(g_green "  System total memory: %lu\n ",
+	       memory_get_total_size());
+	printf("\n");
 }
 
 void log_sysghost_start(char *version)

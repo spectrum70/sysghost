@@ -19,17 +19,9 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "launcher.h"
-#include "log.h"
-#include "monitor.h"
+#include <unistd.h>
 
-int main(int argc, char **argv)
+long memory_get_total_size()
 {
-	log_sysghost_start(VERSION "-g" GIT_VERSION);
-	log_date_time();
-	log_system_info();
-
-	launcher_init();
-
-	return monitor_run();
+	return sysconf(_SC_PHYS_PAGES) * sysconf(_SC_PAGESIZE);
 }
