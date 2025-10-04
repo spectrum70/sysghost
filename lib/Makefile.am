@@ -11,4 +11,5 @@ libcommon_a_SOURCES = \
 		../lib/fs.c \
 		../lib/halt.c \
 		../lib/socket.c \
-                ../lib/hdutils.c
+                ../lib/hdutils.c \
+		../lib/date.c
