@@ -26,6 +26,7 @@
 
 int date_get_date_time(char *date_time)
 {
+	int i;
 	time_t t;
 	struct tm *tm;
 
@@ -37,5 +38,12 @@ int date_get_date_time(char *date_time)
 	if (!tm)
 		return -1;
 
-	return (snprintf(date_time, MAX_DATE_TIME - 1, "%s", asctime(tm)) < 0);
+	i = snprintf(date_time, MAX_DATE_TIME - 1, "%s", asctime(tm));
+	if (i < 0)
+		return i;
+
+	/* Remove dual lf. */
+	date_time[i - 1] = 0;
+
+	return 0;
 }
