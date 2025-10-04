@@ -26,8 +26,13 @@ fi
 
 net_wait ${1}
 
-# Start wpa_supplicant
-/usr/bin/wpa_supplicant -qq -Dnl80211 -i${1} -c/etc/wpa_supplicant.conf 2>&1 > /dev/null
+# Start wpa_supplicant, run it in background and check state
+/usr/bin/wpa_supplicant -qq -Dnl80211 -i${1} -c/etc/wpa_supplicant.conf 2>&1 > /dev/nul &
 # Get ip address now
 /usr/sbin/dhclient ${1}
 
+state_up=""
+
+while [ "${state_up}" != "CONNECTED" ]; do
+	state_up=`wpa_cli status | grep wpa_state | cut -d"=" -f2`
+done
