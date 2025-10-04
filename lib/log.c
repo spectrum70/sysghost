@@ -19,6 +19,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include "cpu.h"
 #include "date.h"
 #include "log.h"
 #include "memory.h"
@@ -162,13 +163,20 @@ void log_date_time()
 		return;
 	}
 
-	printf(g_green "  Welcome to ghost system init, today is %s\n", date_time);
+	printf(g_green "  welcome to the system, today is %s\n", date_time);
 }
 
 void log_system_info()
 {
-	printf(g_green "  System total memory: %lu\n ",
-	       memory_get_total_size());
+	char mem[MAX_H_SIZE] = {0};
+	char arch[MAX_CPU_ARCH] = {0};
+
+	memory_get_total_size(mem);
+	cpu_get_architecture(arch);
+
+	printf(g_green "  architecture: %s\n", arch);
+	printf(g_green "  total system memory: %s\n ", mem);
+
 	printf("\n");
 }
 

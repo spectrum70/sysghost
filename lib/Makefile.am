@@ -13,4 +13,5 @@ libcommon_a_SOURCES = \
 		../lib/socket.c \
                 ../lib/hdutils.c \
 		../lib/date.c \
-		../lib/memory.c
+		../lib/memory.c \
+		../lib/cpu.c

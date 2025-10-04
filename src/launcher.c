@@ -19,12 +19,7 @@
  * Boston, MA 02110-1301, USA.lanucher_step_run_list(...)
  */
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-
 #include <fcntl.h>
-#include <sched.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -32,25 +27,15 @@
 
 #include <sys/wait.h>
 
+#include "cpu.h"
+#include "fs.h"
 #include "log.h"
 #include "mount.h"
 #include "exec.h"
 #include "process.h"
-#include "fs.h"
 #include "utils.h"
 
 #define MAX_ENTRY	512
-
-static int cores;
-
-int launcher_get_cpus()
-{
-	cpu_set_t cs;
-
-	sched_getaffinity(0, sizeof(cs), &cs);
-
-	return CPU_COUNT_S(sizeof(cs), &cs);
-}
 
 void launcher_step_mount()
 {
@@ -191,8 +176,7 @@ void launcher_init()
 
 #endif /* USE_UDEVD */
 
-	cores = launcher_get_cpus();
-	log_step("available cpu cores: %d \\o/\n", cores);
+	log_step("available cpu cores: %d\n", cpu_get_cores_num());
 
 	launcher_step_mount();
 	launcher_run_dbus();

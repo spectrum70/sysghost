@@ -19,23 +19,37 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/* getaffinity needs this */
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+#include <sched.h>
 #include <stdio.h>
-#include <unistd.h>
 
-#include "memory.h"
+#include <sys/utsname.h>
 
-#define SIZE_KILO	(1024)
-#define SIZE_MEGA       (SIZE_KILO * 1024)
-#define SIZE_GIGA	(SIZE_MEGA * 1024)
+#include "cpu.h"
 
-void memory_get_total_size(char *h_size)
+int cpu_get_cores_num()
 {
+	cpu_set_t cs;
+
+	sched_getaffinity(0, sizeof(cs), &cs);
+
+	return CPU_COUNT_S(sizeof(cs), &cs);
+}
+
+void cpu_get_architecture(char *arch)
+{
+	struct utsname os_info;
 	int i;
 
-	long long t_size = (long long)sysconf(_SC_PHYS_PAGES) * sysconf(_SC_PAGESIZE);
-	long giga = t_size / SIZE_GIGA;
-	long mega = (t_size % SIZE_GIGA) / SIZE_MEGA;
+	if (uname(&os_info) != 0) {
+		i = snprintf(arch, MAX_CPU_ARCH - 1, "error");
+	} else {
+		i = snprintf(arch, MAX_CPU_ARCH - 1, "%s", os_info.machine);
+	}
 
-	i = snprintf(h_size, MAX_H_SIZE - 1, "%lu.%2lu GB", giga, mega);
-	h_size[i] = 0;
+	arch[i] = 0;
 }
