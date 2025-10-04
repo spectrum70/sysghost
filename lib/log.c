@@ -19,12 +19,14 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "log.h"
 #include "date.h"
+#include "log.h"
+#include "memory.h"
 
 #include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 
 static int loglevel = 6;
 static int loglevel_max = 12;
@@ -153,14 +155,19 @@ void log_step_success()
 
 void log_date_time()
 {
-	char date_time[MAX_DATE_TIME];
+	char date_time[MAX_DATE_TIME] = {0};
 
 	if (date_get_date_time(date_time) != 0) {
-		snprintf(date_time, 5, "error");
+		strncat(date_time, "error", MAX_DATE_TIME - 1);
 		return;
 	}
 
 	printf(g_green "  Welcome to ghost system init, today is %s\n", date_time);
+}
+
+void log_system_info()
+{
+	printf(g_green "System total mempory %lu\n ", memory_get_total_size());
 }
 
 void log_sysghost_start(char *version)
