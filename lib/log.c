@@ -20,6 +20,7 @@
  */
 
 #include "log.h"
+#include "date.h"
 
 #include <pthread.h>
 #include <stdarg.h>
@@ -148,6 +149,18 @@ void log_step_success()
 	pthread_mutex_lock(&mutex);
 	printf(g_green "done" g_reset "\n");
 	pthread_mutex_unlock(&mutex);
+}
+
+void log_date_time()
+{
+	char date_time[MAX_DATE_TIME];
+
+	if (date_get_date_time(date_time) != 0) {
+		snprintf(date_time, 5, "error");
+		return;
+	}
+
+	printf(g_green "  Welcome to ghost system init, today is %s\n", date_time);
 }
 
 void log_sysghost_start(char *version)

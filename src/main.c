@@ -26,6 +26,7 @@
 int main(int argc, char **argv)
 {
 	log_sysghost_start(VERSION "-g" GIT_VERSION);
+	log_date_time();
 
 	launcher_init();
 

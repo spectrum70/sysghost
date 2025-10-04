@@ -9,6 +9,7 @@ void log_skip(char *fmt, ...);
 void log_step(char *fmt, ...);
 void log_step_success();
 void log_step_err();
+void log_date_time();
 void log_sysghost_start(char *version);
 
 void dbg(char *fmt, ...);
