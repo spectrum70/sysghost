@@ -163,7 +163,7 @@ void log_date_time()
 		return;
 	}
 
-	printf(g_green "  welcome to the system, today is %s\n", date_time);
+	printf(g_green "  Welcome to the system, today is %s\n", date_time);
 }
 
 void log_system_info()
@@ -182,5 +182,5 @@ void log_system_info()
 
 void log_sysghost_start(char *version)
 {
-	printf(g_green "\n  sysghost init v.%s starting\n\n" g_reset, version);
+	printf(g_green "\n  LINUX/sysghost init v.%s starting\n\n" g_reset, version);
 }
