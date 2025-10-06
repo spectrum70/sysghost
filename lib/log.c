@@ -163,7 +163,7 @@ void log_date_time()
 		return;
 	}
 
-	printf(g_green "  Welcome to the system, today is %s\n", date_time);
+	printf(g_green "Welcome to the system, today is %s\n", date_time);
 }
 
 void log_system_info()
@@ -174,13 +174,13 @@ void log_system_info()
 	memory_get_total_size(mem);
 	cpu_get_architecture(arch);
 
-	printf(g_green "  architecture: %s\n", arch);
-	printf(g_green "  total system memory: %s\n ", mem);
+	printf(g_green "architecture: %s\n", arch);
+	printf(g_green "total system memory: %s\n ", mem);
 
 	printf("\n");
 }
 
 void log_sysghost_start(char *version)
 {
-	printf(g_green "\n  LINUX/sysghost init v.%s starting\n\n" g_reset, version);
+	printf(g_green "\nLINUX/sysghost init v.%s starting\n\n" g_reset, version);
 }
