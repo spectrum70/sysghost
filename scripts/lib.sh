@@ -22,7 +22,7 @@ emsg()
 
 start_service()
 {
-	step "service: starting ${1} ... "
+	step "daemon: starting ${1} ... "
 	$@
 	if [ $? == 0 ]; then
 		success
