@@ -92,10 +92,9 @@ void launcher_run_dbus()
 {
 	int timeout = 500;
 	/* Do not use const, since exec_daemon modify the cmd string. */
-	char cmd_mkdir[] = "/usr/bin/mkdir -p /run/dbus";
 	char cmd_run[] = "/usr/bin/dbus-daemon --system";
 
-	exec_daemon(cmd_mkdir);
+	fs_create_dir("/run/dbus", 755);
 	exec_daemon(cmd_run);
 
 	/*
