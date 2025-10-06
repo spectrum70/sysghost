@@ -32,7 +32,8 @@ void memory_get_total_size(char *h_size)
 {
 	int i;
 
-	long long t_size = (long long)sysconf(_SC_PHYS_PAGES) * sysconf(_SC_PAGESIZE);
+	long long t_size = (long long)sysconf(_SC_PHYS_PAGES) *
+				sysconf(_SC_PAGESIZE);
 	long giga = t_size / SIZE_GIGA;
 	long mega = (t_size % SIZE_GIGA) / SIZE_MEGA;
 
