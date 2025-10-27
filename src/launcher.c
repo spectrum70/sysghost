@@ -121,9 +121,14 @@ void launcher_init()
 	int status;
 #endif
 
+	/*
+	 * Note: devtmpfs is already mounted at this stage, due to
+	 * kernel config option DEVTMPFS_MOUNT.
+	 */
+
 #ifdef USE_UDEVD
 	/*
-	 * Very likely, a udevd is mandatory, becouse libinput in wayland
+	 * Very likely, a udevd is mandatory, because libinput in wayland
 	 * seems to work only when a udevd is active, and seems there
 	 * is not alternative to this.
 	 */
@@ -133,15 +138,15 @@ void launcher_init()
 	 * Modern kernels uses devtmpfs that creates devices nodes when the
 	 * kernel boots. Through devtmpfs, at initramfs stage some devices
 	 * are probed and added to /dev.
-	 * Many other are probed after during the next kernel boot sequence,
-	 * but the uevents for additions of all new devcices can't be seen
-	 * from udevd, since udev is started just after. For this reason, the
-	 * following lines are needed after udevd start:
+	 * Some other, especially non built-in, are probed after real rootfs
+	 * is mounted, but before udevd is launched. So the uevents for
+	 * additions of these new devcices can't be seen from udevd
+	 * For this reason, the following lines are needed after udevd start:
 	 *   udevadm trigger --action=add --type=subsystems
 	 *   udevadm trigger --action=add --type=devices
 	 *   udevadm settle
-	 * TODO: such lines are now in udevd.sh. See if possible to execute
-	 * those from here.
+	 * TODO: such lines are now in udevd.sh. See if it's the case to
+         * execute those from here.
 	 */
 	if ((pid = fork()) == 0) {
 		int outfd = open("/tmp/udev.tmp",

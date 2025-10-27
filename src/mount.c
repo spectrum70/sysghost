@@ -123,6 +123,14 @@ int mount_get_fstab_mnt_options(char *opts)
 	return val;
 }
 
+int mount_devtmpfs(void)
+{
+	mkdir("/dev", 0755);
+
+	return mount("devtmpfs", "/dev", "devtmpfs",
+		     MS_NOSUID | MS_RELATIME, "");
+}
+
 int mount_rest(void)
 {
 	int ps_flags = MS_NOSUID | MS_NODEV | MS_NOEXEC | MS_RELATIME;
@@ -295,4 +303,3 @@ int mount_fstab(void)
 
 	return 0;
 }
-
