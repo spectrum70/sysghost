@@ -56,9 +56,12 @@ void launcher_step_virtual_consoles()
 {
 	int i;
 	char vc[][MAX_ENTRY] = {
-		{"/sbin/agetty tty2 linux &"},
-		{"/sbin/agetty tty3 linux &"},
-		{"/sbin/agetty tty4 linux &"},
+		{"/sbin/agetty --skip-login --noissue "
+			"--login-program /usr/local/bin/syslogin tty2 linux &"},
+		{"/sbin/agetty --skip-login --noissue "
+			"--login-program /usr/local/bin/syslogin tty3 linux &"},
+		{"/sbin/agetty --skip-login --noissue "
+			"--login-program /usr/local/bin/syslogin tty4 linux &"},
 		{0},
 	};
 
@@ -195,6 +198,8 @@ void launcher_init()
 	if ((pid = fork()) == 0) {
 		/* Child */
 		execlp("/sbin/agetty", "/sbin/agetty",
+			"--skip-login", "--noissue",
+			"--login-program", "/usr/local/bin/syslogin",
 			"--noclear", "tty1", "38400", "linux", NULL);
 	}
 }
