@@ -83,10 +83,12 @@ static void syslogin_get_input(char *in, int max_len, char pwd)
 
 		c = pwd ? getch() : getchar();
 
-		if (c == 0x08) {
+		if (c == 0x08 || c == 127) {
 			if (len) {
 				in[len] = 0;
 				len--;
+				if (pwd)
+					printf("\b \b");
 			}
 		} else if (c >= 32 && c < 127) {
 			in[len++] = c;
