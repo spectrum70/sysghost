@@ -66,11 +66,12 @@ static void *thread_user(void *arg)
 	DIR* dir;
 	struct dirent *ent;
 	struct stat states;
+	char fname[PATH_MAX] = {0};
 	const char *ext;
 
 	if (chdir(PATH_USR_SERVICES))
 		return (void *)-1;
-	dir = opendir(".");
+	dir = opendir(PATH_USR_SERVICES);
 
 	while ((ent = readdir(dir)) != NULL) {
 		stat(ent->d_name, &states);
@@ -82,7 +83,9 @@ static void *thread_user(void *arg)
 		/* Executable ? */
 		if(access(ent->d_name, X_OK))
 			continue;
-		execl(ent->d_name, ent->d_name, NULL);
+		strcpy(fname, PATH_USR_SERVICES);
+		strcpy(fname, ent->d_name);
+		execl(fname, fname, NULL);
 	}
 
 	closedir(dir);
