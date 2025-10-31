@@ -22,8 +22,10 @@
 #include <bits/local_lim.h>
 
 #include <crypt.h>
+#include <dirent.h>
 #include <errno.h>
 #include <grp.h>
+#include <pthread.h>
 #include <pwd.h>
 #include <shadow.h>
 #include <signal.h>
@@ -34,6 +36,7 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
 
@@ -43,6 +46,58 @@
 #define ERR_LOGIN		-1
 #define ERR_NO_ROOT		-2
 #define ERR_CANNOT_ENCRYPT	-3
+
+#define PATH_USR_SERVICES	"/etc/sysghost/user"
+
+static char is_tty;
+
+const char *get_filename_ext(const char *filename)
+{
+	const char *dot = strrchr(filename, '.');
+
+	if(!dot || dot == filename)
+		return "";
+
+	return dot + 1;
+}
+
+static void *thread_user(void *arg)
+{
+	DIR* dir;
+	struct dirent *ent;
+	struct stat states;
+	const char *ext;
+
+	if (chdir(PATH_USR_SERVICES))
+		return (void *)-1;
+	dir = opendir(".");
+
+	while ((ent = readdir(dir)) != NULL) {
+		stat(ent->d_name, &states);
+		if (!strcmp(".", ent->d_name) || !strcmp("..", ent->d_name))
+			continue;
+		ext = get_filename_ext(ent->d_name);
+		if (strcmp(ext, "sh"))
+			continue;
+		/* Executable ? */
+		if(access(ent->d_name, X_OK))
+			continue;
+		execl(ent->d_name, ent->d_name, NULL);
+	}
+
+	closedir(dir);
+	return (void *)0;
+}
+
+void start_user_services(void)
+{
+	pthread_t thread;
+	int ret;
+
+	ret = pthread_create(&thread, NULL, thread_user, 0);
+	if (ret != 0)
+		printf("error creating user thread\n");
+}
 
 static void ctrl_c_handler(int _)
 {
@@ -105,6 +160,9 @@ static void print_uname()
 {
 	struct utsname buffer;
 	char *tty_name = ttyname(STDIN_FILENO);
+
+	if (strstr(tty_name, "/tty") != 0)
+		is_tty = 1;
 
 	errno = 0;
 	if (uname(&buffer) < 0) {
@@ -183,6 +241,9 @@ static int syslogin_prompt(void)
 		setgroups(ngroups, groups);
 		/* Last, step down. */
 		setuid(pwd_entry->pw_uid);
+		/* Starting user services, tty only. */
+		if (is_tty)
+			start_user_services();
 		/* GO */
 		putenv("ZDOTDIR=/home/angelo");
 		putenv("HOME=/home/angelo");
