@@ -39,6 +39,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
+#include <sys/wait.h>
 
 #define VT100_COLOR_GREEN	"\x1b[92m"
 #define VT100_COLOR_RESET	"\x1b[0m"
@@ -61,6 +62,25 @@ const char *get_filename_ext(const char *filename)
 	return dot + 1;
 }
 
+static void execute_script(char *name)
+{
+	int child_pid;
+
+	child_pid = fork();
+	if (child_pid == 0) {
+		system("echo \"*** executing script ***\" >> /tmp/log");
+		/* Child, set as independent from parent */
+		system(name);
+		system("echo \"*** executed ***\" >> /tmp/log");
+	} else {
+		int wstatus;
+
+		do {
+			waitpid(child_pid, &wstatus, 0);
+		} while (!WIFEXITED(wstatus));
+	}
+}
+
 static void *thread_user(void *arg)
 {
 	DIR* dir;
@@ -71,6 +91,7 @@ static void *thread_user(void *arg)
 
 	if (chdir(PATH_USR_SERVICES))
 		return (void *)-1;
+
 	dir = opendir(PATH_USR_SERVICES);
 
 	while ((ent = readdir(dir)) != NULL) {
@@ -83,23 +104,56 @@ static void *thread_user(void *arg)
 		/* Executable ? */
 		if(access(ent->d_name, X_OK))
 			continue;
-		strcpy(fname, PATH_USR_SERVICES);
-		strcpy(fname, ent->d_name);
-		execl(fname, fname, NULL);
+		/* Let's just go with system, no exec family, no replace. */
+		strcat(fname, PATH_USR_SERVICES);
+		strcat(fname, "/");
+		strcat(fname, ent->d_name);
+		execute_script(fname);
 	}
 
 	closedir(dir);
 	return (void *)0;
 }
 
-void start_user_services(void)
+static void run_user_thread(void)
 {
+	/* Child */
 	pthread_t thread;
 	int ret;
 
 	ret = pthread_create(&thread, NULL, thread_user, 0);
 	if (ret != 0)
 		printf("error creating user thread\n");
+
+	pthread_join(thread, 0);
+}
+
+static void start_user_services(void)
+{
+	int child_pid;
+
+	/* Dual fork, we want independant process to parse scripts. */
+	child_pid = fork();
+	if (child_pid == 0) {
+		if (setsid() != -1) {
+			int i_pid;
+
+			i_pid = fork();
+			if (i_pid == 0) {
+				/*
+				 * Thread joined,
+				 * will not terminate until completed.
+				* */
+				run_user_thread();
+			}
+		}
+	} else {
+		int wstatus;
+
+		do {
+			waitpid(child_pid, &wstatus, 0);
+		} while (!WIFEXITED(wstatus));
+	}
 }
 
 static void ctrl_c_handler(int _)
