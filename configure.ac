@@ -1,5 +1,5 @@
 AC_PREREQ([2.69])
-AC_INIT([sysghost], [0.90.01], [angelo@kernel-space.org], [sysghost], [http://www.kernel-space.org/])
+AC_INIT([sysghost], [0.91.00], [angelo@kernel-space.org], [sysghost], [http://www.kernel-space.org/])
 AM_INIT_AUTOMAKE(subdir-objects)
 AC_PROG_RANLIB
 
