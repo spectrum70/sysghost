@@ -51,6 +51,7 @@
 #define PATH_USR_SERVICES	"/etc/sysghost/user"
 
 static char is_tty;
+static struct termios old_tio;
 
 const char *get_filename_ext(const char *filename)
 {
@@ -174,7 +175,7 @@ static void login_error(char *fmt, ...)
 }
 
 static int getch() {
-	struct termios old_tio, new_tio;
+	struct termios new_tio;
 	int ch;
 
 	tcgetattr(STDIN_FILENO, &old_tio);
@@ -185,6 +186,11 @@ static int getch() {
 	tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
 
 	return ch;
+}
+
+static void syslogin_trmio_reset()
+{
+	tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
 }
 
 static void syslogin_get_input(char *in, int max_len, char pwd)
@@ -262,6 +268,8 @@ static int syslogin_prompt(void)
 	printf(VT100_COLOR_GREEN "Password: ");
 
 	syslogin_get_input(pwd, LOGIN_NAME_MAX, 1);
+	/* TODO: investigate OK in the output. */
+	printf("\n");
 
 	pwd_entry = getpwnam(user);
 	if (!pwd_entry) {
@@ -304,7 +312,11 @@ static int syslogin_prompt(void)
 		/* GO */
 		putenv("ZDOTDIR=/home/angelo");
 		putenv("HOME=/home/angelo");
-		execl(pwd_entry->pw_shell, pwd_entry->pw_shell, "--login", NULL);
+
+		/* Restore keyboard */
+		syslogin_trmio_reset();
+		execl(pwd_entry->pw_shell,
+			pwd_entry->pw_shell, "--login", NULL);
 	} else {
 		login_error("incorrect password\n");
 		return ERR_LOGIN;
