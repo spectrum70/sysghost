@@ -24,6 +24,7 @@
 #include <crypt.h>
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <grp.h>
 #include <pthread.h>
 #include <pwd.h>
@@ -51,9 +52,60 @@
 #define PATH_USR_SERVICES	"/etc/sysghost/user"
 
 static char is_tty;
-static struct termios old_tio;
 
-const char *get_filename_ext(const char *filename)
+// #define DEBUG_LOG
+
+#ifdef DEBUG_LOG
+
+#define PATH_LOG "/tmp/syslogin"
+
+static FILE *flog;
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static int create_log_file()
+{
+	flog = fopen(PATH_LOG, "w");
+
+	if (flog == 0)
+		return -1;
+
+	chmod(PATH_LOG, 0666);
+
+	/* Turn off buffering, immediate write. */
+	setvbuf(stdin, NULL, _IONBF, 0);
+	fcntl(fileno(flog), F_SETFL,
+	      fcntl(fileno(flog), F_GETFL) | O_DSYNC | O_RSYNC);
+
+	return 0;
+}
+
+static void log(char *fmt, ...)
+{
+	va_list ap;
+
+	pthread_mutex_lock(&mutex);
+
+	if (flog) {
+		int l = strlen(fmt);
+		if (l > 0) {
+			va_start(ap, fmt);
+			vfprintf(flog, fmt, ap);
+			if (fmt[l - 1] != '\n')
+				fprintf(flog, "\n");
+			va_end(ap);
+			fflush(flog);
+			sync();
+		}
+	}
+
+	pthread_mutex_unlock(&mutex);
+}
+#else
+static void log(char *fmt, ...)
+{}
+#endif /* DEBUG_LOG */
+
+static const char *get_filename_ext(const char *filename)
 {
 	const char *dot = strrchr(filename, '.');
 
@@ -69,16 +121,21 @@ static void execute_script(char *name)
 
 	child_pid = fork();
 	if (child_pid == 0) {
-		system("echo \"*** executing script ***\" >> /tmp/log");
+		log("%s() executing script", __func__);
 		/* Child, set as independent from parent */
 		system(name);
-		system("echo \"*** executed ***\" >> /tmp/log");
+		log("%s() script executed", __func__);
+		exit(0);
 	} else {
 		int wstatus;
+
+		log("%s() waiting fork script to be executed", __func__);
 
 		do {
 			waitpid(child_pid, &wstatus, 0);
 		} while (!WIFEXITED(wstatus));
+
+		log("%s() fork script executed", __func__);
 	}
 }
 
@@ -89,6 +146,8 @@ static void *thread_user(void *arg)
 	struct stat states;
 	char fname[PATH_MAX] = {0};
 	const char *ext;
+
+	log("%s() thread started", __func__);
 
 	if (chdir(PATH_USR_SERVICES))
 		return (void *)-1;
@@ -113,6 +172,9 @@ static void *thread_user(void *arg)
 	}
 
 	closedir(dir);
+
+	log("%s() thread exiting", __func__);
+
 	return (void *)0;
 }
 
@@ -127,18 +189,20 @@ static void run_user_thread(void)
 		printf("error creating user thread\n");
 
 	pthread_join(thread, 0);
+
+	log("%s() thread exited\n", __func__);
 }
 
 static void start_user_services(void)
 {
-	int child_pid;
+	int child_pid, i_pid;;
+
+	log("%s() entered", __func__);
 
 	/* Dual fork, we want independant process to parse scripts. */
 	child_pid = fork();
 	if (child_pid == 0) {
 		if (setsid() != -1) {
-			int i_pid;
-
 			i_pid = fork();
 			if (i_pid == 0) {
 				/*
@@ -146,14 +210,16 @@ static void start_user_services(void)
 				 * will not terminate until completed.
 				* */
 				run_user_thread();
+				log("%s() run_user_thread exited", __func__);
+
+				/* Terminate this subprocess */
+				exit(0);
 			}
 		}
+		/* Terminate. */
+		exit(0);
 	} else {
-		int wstatus;
-
-		do {
-			waitpid(child_pid, &wstatus, 0);
-		} while (!WIFEXITED(wstatus));
+		log("%s() run_user_thread detached", __func__);
 	}
 }
 
@@ -175,7 +241,7 @@ static void login_error(char *fmt, ...)
 }
 
 static int getch() {
-	struct termios new_tio;
+	struct termios old_tio, new_tio;
 	int ch;
 
 	tcgetattr(STDIN_FILENO, &old_tio);
@@ -186,11 +252,6 @@ static int getch() {
 	tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
 
 	return ch;
-}
-
-static void syslogin_trmio_reset()
-{
-	tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
 }
 
 static void syslogin_get_input(char *in, int max_len, char pwd)
@@ -268,7 +329,7 @@ static int syslogin_prompt(void)
 	printf(VT100_COLOR_GREEN "Password: ");
 
 	syslogin_get_input(pwd, LOGIN_NAME_MAX, 1);
-	/* TODO: investigate OK in the output. */
+	/* TODO: investigate OK in the output */
 	printf("\n");
 
 	pwd_entry = getpwnam(user);
@@ -312,11 +373,8 @@ static int syslogin_prompt(void)
 		/* GO */
 		putenv("ZDOTDIR=/home/angelo");
 		putenv("HOME=/home/angelo");
-
-		/* Restore keyboard */
-		syslogin_trmio_reset();
 		execl(pwd_entry->pw_shell,
-			pwd_entry->pw_shell, "--login", NULL);
+		      pwd_entry->pw_shell, "--login", NULL);
 	} else {
 		login_error("incorrect password\n");
 		return ERR_LOGIN;
@@ -329,6 +387,10 @@ int main(int argc, char **argv)
 {
 	int attempts = 0;
 
+#ifdef DEBUG_LOG
+	create_log_file();
+#endif
+
 	while (syslogin_prompt() == ERR_LOGIN) {
 		attempts++;
 		sleep(1);
@@ -337,6 +399,8 @@ int main(int argc, char **argv)
 			sleep(10);
 		}
 	}
+
+	log("*** syslog exiting ***\n");
 
 	return 0;
 }
