@@ -5,31 +5,32 @@
 
 source /etc/sysghost/lib-net.sh
 
-setup_backlight() {
-	chown root:video /sys/class/backlight/nv_backlight/brightness
-	chown root:video /sys/class/backlight/nv_backlight/max_brightness
-	chmod g+w /sys/class/backlight/nv_backlight/brightness
-	chmod g+r /sys/class/backlight/nv_backlight/max_brightness
-	cat /sys/class/backlight/nv_backlight/max_brightness > \
-		/sys/class/backlight/nv_backlight/brightness
+setup_anything() {
+	# Setup whatever else needed.
 }
 
 setup_network() {
-	NS="1.1.1.1"
+	# NS="1.1.1.1"
 
-	sysctl -w net.ipv4.ping_group_range="0 1000" > /dev/null
+	# Specific net configurations ...
+	# sysctl -w net.ipv4.ping_group_range="0 1000" > /dev/null
 
-	net_start lo 127.0.0.1/24 up
+	# Using net_start From lib-net
+	# net_start lo 127.0.0.1/24 up
+	# net start eth0 192.168.0.2/24 up
 
-	# wifi can take seconds, run it in parallel
-	/etc/sysghost/p-net-wifi.sh wlo1 &
+	# Wifi start can take seconds, p-net-wifi.sh
+	# runs it in parallel.
+	# /etc/sysghost/p-net-wifi.sh wlo1 &
 
-	# setup dns
-	echo "nameserver ${NS}" > /etc/resolv.conf
+	# Setup dns
+	# echo "nameserver ${NS}" > /etc/resolv.conf
 }
 
-setup_backlight
+# Order below the preferred setup sequence.
+setup_anything
 setup_network
 
-start_service "/usr/sbin/metalog --daemonize"
-start_service "/usr/sbin/pcscd --disable-polkit"
+# Start here additional services.
+# start_service "/usr/sbin/metalog --daemonize"
+# start_service "/usr/sbin/pcscd --disable-polkit"

@@ -11,8 +11,7 @@ source /etc/sysghost/lib.sh
 
 load_early_cmds()
 {
-	cat /sys/class/backlight/nv_backlight/max_brightness > \
-		/sys/class/backlight/nv_backlight/brightness
+	# Any early command here.
 }
 
 
