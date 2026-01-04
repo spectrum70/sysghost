@@ -26,6 +26,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
+#include <linux/limits.h>
 #include <pthread.h>
 #include <pwd.h>
 #include <shadow.h>
@@ -358,6 +359,8 @@ static int syslogin_prompt(void)
 	int ngroups = 255;
 
 	if (strcmp(encrypted, pwd_entry->pw_passwd) == 0) {
+		char home[PATH_MAX] = {"/home/"};
+		char path[PATH_MAX];
 		int ret;
 
 		ret = getgrouplist(user, pwd_entry->pw_gid, groups, &ngroups);
@@ -365,14 +368,26 @@ static int syslogin_prompt(void)
 			return ERR_LOGIN;
 		setgid(pwd_entry->pw_gid);
 		setgroups(ngroups, groups);
+
 		/* Last, step down. */
 		setuid(pwd_entry->pw_uid);
 		/* Starting user services, tty only. */
 		if (is_tty)
 			start_user_services();
-		/* GO */
-		putenv("ZDOTDIR=/home/angelo");
-		putenv("HOME=/home/angelo");
+
+		/* Move to user dir */
+		strcat(home, user);
+		chdir(home);
+
+		/* Setup important env */
+		strcpy(path, "ZDOTDIR=");
+		strcat(path, home);
+		putenv(path);
+		strcpy(path, "HOME=");
+		strcat(path, home);
+		putenv(path);
+
+		/* Executing the user shell shell */
 		execl(pwd_entry->pw_shell,
 		      pwd_entry->pw_shell, "--login", NULL);
 	} else {
