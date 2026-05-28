@@ -166,7 +166,7 @@ static void *thread_user(void *arg)
 		if(access(ent->d_name, X_OK))
 			continue;
 		/* Let's just go with system, no exec family, no replace. */
-		strcat(fname, PATH_USR_SERVICES);
+		strncpy(fname, PATH_USR_SERVICES, PATH_MAX);
 		strcat(fname, "/");
 		strcat(fname, ent->d_name);
 		execute_script(fname);
