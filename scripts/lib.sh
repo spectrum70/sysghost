@@ -22,8 +22,9 @@ emsg()
 
 start_service()
 {
+	# start_service must be called with double quotes "command"
 	step "daemon: starting ${1} ... "
-	$@
+	eval $@
 	if [ $? == 0 ]; then
 		success
 	else
