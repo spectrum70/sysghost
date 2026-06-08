@@ -12,6 +12,7 @@ source /etc/sysghost/lib.sh
 load_early_cmds()
 {
 	# Any early command here.
+	echo
 }
 
 

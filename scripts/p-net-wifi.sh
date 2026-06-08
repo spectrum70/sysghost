@@ -19,9 +19,9 @@ for i in $(seq 1 10); do
 		break
 	fi
 done
-if [ ${state_rfkill} != "ok" ]; then
+if [ "${state_rfkill}" != "ok" ]; then
 	error
-	return 1
+	exit 1
 fi
 
 # Wait iface to be available
@@ -36,11 +36,16 @@ net_wait ${1}
 # Waiting for connect
 while [ true ]; do
 	sleep 0.5
+	if [[ ! -e /var/run/wpa_supplicant ]]; then
+		continue
+	fi
 	wpa_status=$(wpa_cli status | grep wpa_state | cut -d"=" -f2)
 	if [[ $wpa_status == *"COMPLETED"* ]]; then
-		break
+		/usr/sbin/dhclient ${1}
+		exit 0
 	fi
 done
 
-# Get ip address now
-/usr/sbin/dhclient ${1}
+echo "cannot connect to wifi network, exiting"
+
+exit 1
