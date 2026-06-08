@@ -38,6 +38,7 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
@@ -386,6 +387,10 @@ static int syslogin_prompt(void)
 		strcpy(path, "HOME=");
 		strcat(path, home);
 		putenv(path);
+
+		setsid();
+		if (ioctl(0, TIOCSCTTY, 1) < 0)
+			printf("error setting TIOCSCTTY\n");
 
 		/* Executing the user shell shell */
 		execl(pwd_entry->pw_shell,
